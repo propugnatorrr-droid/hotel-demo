@@ -25,5 +25,99 @@
     "ctaDemo": "Enter the demo",
     "ctaResort": "View the resort website",
     "status": "Phase 1 · in progress"
+  },
+  "auth": {
+    "title": "Welcome back",
+    "subtitle": "Sign in to your hotel dashboard.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "or": "or",
+    "demoTitle": "Try the demo",
+    "demoSubtitle": "One click into Vala Resort & Spa. All data is fictional.",
+    "panelCaption": "Vala Resort & Spa · Dhërmi · demo",
+    "panelCardLabel": "Morning briefing",
+    "panelCardBody": "Good morning, Dritan. Yesterday you earned €4,280, 12% more than last week.",
+    "panelQuote": "Your hotel, calm as the sea at dawn.",
+    "errors": {
+      "invalid": "Wrong email or password.",
+      "missing": "Enter your email and password.",
+      "notConfigured": "Supabase isn't configured yet. Fill in .env.local (see PLAN.md §17).",
+      "demoDisabled": "Demo login is disabled.",
+      "noMembership": "Your account isn't linked to any hotel."
+    }
+  },
+  "roles": {
+    "owner": "Owner",
+    "manager": "Manager",
+    "receptionist": "Reception",
+    "housekeeping": "Housekeeping",
+    "pos": "Bar & restaurant",
+    "spa": "Spa",
+    "accountant": "Finance"
+  },
+  "nav": {
+    "groups": {
+      "operations": "Operations",
+      "communication": "Communication",
+      "sales": "Sales",
+      "finance": "Finance",
+      "system": "System"
+    },
+    "items": {
+      "today": "Today",
+      "calendar": "Calendar",
+      "bookings": "Bookings",
+      "rooms": "Rooms",
+      "housekeeping": "Housekeeping",
+      "guests": "Guests",
+      "inbox": "Inbox",
+      "pos": "Bar & restaurant",
+      "spa": "Spa",
+      "invoices": "Invoices",
+      "expenses": "Expenses",
+      "reports": "Reports",
+      "channels": "Channels (OTA)",
+      "settings": "Settings"
+    }
+  },
+  "shell": {
+    "demoBanner": "Demo · all data is fictional",
+    "simpleMode": "Simple mode",
+    "simpleModeHint": "Only the essentials",
+    "openMenu": "Open menu",
+    "signOut": "Sign out",
+    "switchOrg": "Switch hotel",
+    "searchPlaceholder": "Ask your hotel or search…",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    }
+  },
+  "command": {
+    "title": "Ask your hotel",
+    "placeholder": "Ask anything… e.g. “Who's arriving tomorrow?”",
+    "ask": "Ask your hotel",
+    "navigate": "Go to",
+    "empty": "Nothing found.",
+    "suggestions": "Try",
+    "s1": "How much did the bar make this week?",
+    "s2": "Who's arriving tomorrow?",
+    "s3": "Which channel brings the most money?",
+    "aiSoon": "AI answers connect to your hotel's data in Batch 15.",
+    "hintNavigate": "move",
+    "hintSelect": "select"
+  },
+  "comingSoon": {
+    "eyebrow": "In progress",
+    "title": "{section} is coming soon",
+    "body": "This module is built in Batch {batch}. The demo data is ready.",
+    "back": "Back to Today"
+  },
+  "dashboard": {
+    "subtitle": "Here's what's happening today at {org}.",
+    "placeholderBody": "The full dashboard with the morning briefing arrives in Batch 4."
   }
 }
