@@ -1,4 +1,4 @@
-import { date, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, date, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { createdAt, id, money, qty, rate } from './columns';
 import { bookings, folios } from './bookings';
 import { currency, department, invoiceStatus, paymentMethod } from './enums';
@@ -67,7 +67,7 @@ export const cashShifts = pgTable(
     orgId: orgRef(),
     userId: uuid()
       .notNull()
-      .references(() => profiles.id, { onDelete: 'restrict' }),
+      .references(() => profiles.id, { onDelete: 'no action' }),
     outletId: uuid().references(() => outlets.id, { onDelete: 'set null' }),
     openedAt: createdAt(),
     closedAt: timestamp({ withTimezone: true }),
@@ -93,8 +93,8 @@ export const payments = pgTable(
     amount: money().notNull(),
     currency: currency().notNull().default('EUR'),
     method: paymentMethod().notNull(),
-    isDeposit: text().default('false'),
-    isRefund: text().default('false'),
+    isDeposit: boolean().notNull().default(false),
+    isRefund: boolean().notNull().default(false),
     reference: text(),
     providerRef: text(),
     receivedBy: uuid().references(() => profiles.id, { onDelete: 'set null' }),
