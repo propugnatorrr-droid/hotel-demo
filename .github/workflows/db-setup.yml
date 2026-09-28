@@ -1,0 +1,65 @@
+name: Database setup (schema + SQL + demo seed)
+
+on:
+  workflow_dispatch:
+    inputs:
+      push_schema:
+        description: 'Create/update tables (drizzle-kit push)'
+        type: boolean
+        default: true
+      run_sql:
+        description: 'Run supabase/sql/*.sql (only needed the first time)'
+        type: boolean
+        default: true
+      seed:
+        description: 'Reset and seed the demo (Vala Resort & Spa)'
+        type: boolean
+        default: true
+  schedule:
+    # Every night 03:30 UTC (05:30 Tirana): fresh demo dates + keeps Supabase awake
+    - cron: '30 3 * * *'
+
+concurrency:
+  group: db-setup
+  cancel-in-progress: false
+
+jobs:
+  db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Check secrets
+        run: |
+          for v in DATABASE_URL NEXT_PUBLIC_SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY DEMO_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "::error::Missing repository secret $v"; exit 1; fi
+          done
+
+      - name: Push schema
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.push_schema }}
+        run: npx drizzle-kit push --force
+
+      - name: Run Supabase SQL (auth trigger, RLS, storage, realtime)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_sql }}
+        run: |
+          for f in supabase/sql/*.sql; do
+            echo "▶ $f"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+          done
+
+      - name: Seed demo data
+        if: ${{ github.event_name == 'schedule' || inputs.seed }}
+        run: npm run db:seed
