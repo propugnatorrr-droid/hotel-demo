@@ -217,6 +217,10 @@ Owners in Albania have money but aren't very tech-savvy, so **simplicity is a fe
 - **Offline mode for fiscalization** (important in Albania; BESA advertises it, so it's on the roadmap).
 - Guest mobile app, native staff apps.
 - Other sectors (car rental, transport, law firms, clinics) under their own brands.
+### 7.14 Ideas adopted from open-source research (later batches)
+- Night audit (end-of-day close: post room charges, roll the business date, lock the day).
+- Room move (change room mid-stay, keep folio + history).
+- Duplicate-guest merge (same phone/email/document → merge profiles).
 
 ---
 
@@ -537,8 +541,8 @@ See `.env.example`. Core: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBL
 ## 20. Progress
 
 - [x] Batch 1: foundation (this file, config, design tokens, theme, i18n, Supabase, proxy, schema)
-- [ ] Batch 2: SQL/RLS, seed, UI primitives
-- [ ] Batch 3: auth + app shell
+- [x] Batch 2: SQL/RLS, seed, UI primitives
+- [x] Batch 3: auth + app shell (login, one-click demo login by role, requireOrg/hasModule, sidebar, topbar, org switcher, Simple mode, ⌘K shell, placeholder routes)
 - [ ] Batch 4: dashboard + morning briefing
 - [ ] Batch 5: rooms, floor plan, housekeeping
 - [ ] Batch 6: bookings, guests, folio
