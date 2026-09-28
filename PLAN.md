@@ -510,6 +510,17 @@ Each batch = one message of files. Tick in §20 when pasted and running.
 7. Deploy: import the GitHub repo into Vercel, add the same env vars, region `fra1` (from `vercel.json`).
 
 The app runs without Supabase env vars (the proxy skips auth), so the placeholder home works immediately.
+### 17.1 GitHub-only setup (no local machine)
+1. Supabase → New project → region **EU Central (Frankfurt)**. Save the DB password.
+2. Supabase → Connect → copy two connection strings:
+   - **Session pooler** (port **5432**) → GitHub secret `DATABASE_URL` (used by the Action; GitHub runners have no IPv6, so never the "direct" URL).
+   - **Transaction pooler** (port **6543**) → Vercel env `DATABASE_URL`.
+   - URL-encode special characters in the password (`@` → `%40`, `#` → `%23`).
+3. GitHub repo → Settings → Secrets and variables → Actions → add `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `DEMO_PASSWORD`.
+4. GitHub → Actions → "Database setup" → Run workflow (all three boxes ticked the first time). Later runs: untick "Run supabase/sql".
+5. The workflow re-seeds the demo **every night (05:30 Tirana)**: dates stay fresh and Supabase never pauses. Demo edits are wiped nightly (intended).
+6. Vercel → Add New Project → import the repo → env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL` (6543), `NEXT_PUBLIC_APP_URL`, `DEMO_PASSWORD`, `DEMO_LOGIN_ENABLED=true` → Deploy.
+7. Every push to `main` redeploys. Build errors: Vercel → Deployments → the failed one → Build Logs.
 
 ---
 
@@ -543,7 +554,7 @@ See `.env.example`. Core: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBL
 - [x] Batch 1: foundation (this file, config, design tokens, theme, i18n, Supabase, proxy, schema)
 - [x] Batch 2: SQL/RLS, seed, UI primitives
 - [x] Batch 3: auth + app shell (login, one-click demo login by role, requireOrg/hasModule, sidebar, topbar, org switcher, Simple mode, ⌘K shell, placeholder routes)
-- [ ] Batch 4: dashboard + morning briefing
+- [x] Batch 4: dashboard + morning briefing (KPIs with count-up, 14-day revenue chart, arrivals/departures, alerts, room status, 7-day forecast, channel mix + OTA commissions, Simple mode, money hidden from non-finance roles)
 - [ ] Batch 5: rooms, floor plan, housekeeping
 - [ ] Batch 6: bookings, guests, folio
 - [ ] Batch 7: master calendar
@@ -564,3 +575,4 @@ See `.env.example`. Core: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBL
 - 2026-09-28: Plan created. Batch 1 delivered.
 - 2026-09-28: Batch 2 delivered (+ fixes: `onDelete 'no action'`, boolean payment flags, `@theme static`, dates.ts paste error). Open-source research done (§5.1).
 - 2026-09-28: Batch 3 delivered.
+- 2026-09-28 · Batch 4 delivered. Added `radix-ui` to package.json (was missing). Added `.github/workflows/db-setup.yml` (schema push + SQL + seed from GitHub, nightly re-seed). Morning briefing is template-based for now (live data, Albanian-first ICU messages); Batch 15 swaps it for the AI version. Charts are hand-built (div/SVG + Motion), no visx, to keep the bundle small. Alert titles are stored in Albanian in the DB (English UI shows them in Albanian until Batch 15 localizes them).
