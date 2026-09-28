@@ -43,7 +43,7 @@
     "errors": {
       "invalid": "Wrong email or password.",
       "missing": "Enter your email and password.",
-      "notConfigured": "Supabase isn't configured yet. Fill in .env.local (see PLAN.md §17).",
+      "notConfigured": "Supabase isn't configured yet. Set the environment variables (see PLAN.md §17).",
       "demoDisabled": "Demo login is disabled.",
       "noMembership": "Your account isn't linked to any hotel."
     }
@@ -116,8 +116,107 @@
     "body": "This module is built in Batch {batch}. The demo data is ready.",
     "back": "Back to Today"
   },
+  "sources": {
+    "direct": "Direct",
+    "website": "Our website",
+    "booking_com": "Booking.com",
+    "airbnb": "Airbnb",
+    "expedia": "Expedia",
+    "agoda": "Agoda",
+    "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
+    "messenger": "Messenger",
+    "phone": "Phone",
+    "ai_voice": "AI voice",
+    "walk_in": "Walk-in"
+  },
+  "roomStatus": {
+    "clean": "Clean",
+    "dirty": "Dirty",
+    "inspected": "Inspected",
+    "out_of_order": "Out of order"
+  },
   "dashboard": {
     "subtitle": "Here's what's happening today at {org}.",
-    "placeholderBody": "The full dashboard with the morning briefing arrives in Batch 4."
+    "briefing": {
+      "eyebrow": "Today's briefing",
+      "revenue": "Yesterday you earned <b>{amount}</b>, {dir, select, up {<b>{pct}</b> more than} down {<b>{pct}</b> less than} other {the same as}} the same day last week.",
+      "revenueNoCompare": "Yesterday you earned <b>{amount}</b>.",
+      "occupancy": "Tonight the hotel is <b>{occ}</b> full ({occupied} of {total} rooms).",
+      "movements": "Today <b>{arrivals, plural, =0 {no bookings} one {# booking} other {# bookings}}</b> arrive{vip, plural, =0 {} other {, # of them VIP,}} and {departures, plural, =0 {no rooms} one {# room} other {# rooms}} check out.",
+      "peak": "The busiest day this week is {day}, at <b>{occ}</b>.",
+      "attention": "<b>{count, plural, one {# thing needs} other {# things need}}</b> your attention.",
+      "allGood": "Nothing urgent. A calm day, like the sea at dawn.",
+      "actionAlerts": "See alerts",
+      "actionInbox": "Open inbox",
+      "actionCalendar": "Open calendar"
+    },
+    "kpi": {
+      "revenueYesterday": "Revenue yesterday",
+      "vsLastWeek": "{dir, select, up {↑ {pct}} down {↓ {pct}} other {Same}} vs last week",
+      "noCompare": "No comparison with last week",
+      "occupancyTonight": "Occupancy tonight",
+      "roomsOf": "{occupied} of {total} rooms",
+      "adr": "Average nightly rate",
+      "revpar": "RevPAR yesterday: {value}",
+      "movements": "Arrivals · departures",
+      "inHouseNow": "{count, plural, one {# room occupied now} other {# rooms occupied now}}",
+      "inHouse": "In-house now",
+      "arrivalsToday": "{count, plural, one {# arrival today} other {# arrivals today}}",
+      "housekeeping": "Housekeeping today",
+      "housekeepingSub": "{done} done · {inProgress} in progress"
+    },
+    "revenue": {
+      "title": "Revenue",
+      "subtitle": "Last 14 days · hover a day",
+      "rooms": "Rooms",
+      "fb": "Bar & restaurant",
+      "spa": "Spa",
+      "today": "today, so far"
+    },
+    "movement": {
+      "title": "Today's movements",
+      "arrivals": "Arrivals",
+      "departures": "Departures",
+      "emptyArrivals": "No arrivals today.",
+      "emptyDepartures": "No departures today.",
+      "room": "Room {number}",
+      "noRoom": "No room",
+      "nights": "{count, plural, one {# night} other {# nights}}",
+      "guests": "{adults, plural, one {# adult} other {# adults}}{children, plural, =0 {} one {, # child} other {, # children}}",
+      "eta": "Arrives around {time}",
+      "expected": "Expected today",
+      "tentative": "Unconfirmed",
+      "arrived": "Arrived",
+      "departed": "Checked out",
+      "toCheckOut": "Leaves today",
+      "balance": "Balance {amount}"
+    },
+    "alerts": {
+      "title": "Needs attention",
+      "subtitle": "Automatic alerts for money and operations",
+      "empty": "No alerts. All good.",
+      "inbox": "{count, plural, one {# conversation is waiting for you} other {# conversations are waiting for you}}",
+      "severity": {
+        "info": "Info",
+        "warning": "Warning",
+        "critical": "Urgent"
+      }
+    },
+    "rooms": {
+      "title": "Room status",
+      "tasks": "Tasks today: {open} open · {inProgress} in progress · {done} done"
+    },
+    "forecast": {
+      "title": "Occupancy, next 7 days",
+      "today": "Today"
+    },
+    "channels": {
+      "title": "Where bookings come from",
+      "subtitle": "New bookings, last 30 days",
+      "bookings": "{count, plural, one {# booking} other {# bookings}}",
+      "commission": "OTA commissions: <b>{amount}</b>. Every direct booking keeps this money in the hotel.",
+      "empty": "No new bookings this month."
+    }
   }
 }
