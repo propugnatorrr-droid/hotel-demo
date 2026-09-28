@@ -25,5 +25,99 @@
     "ctaDemo": "Hyni në demo",
     "ctaResort": "Shikoni faqen e resortit",
     "status": "Faza 1 · në ndërtim"
+  },
+  "auth": {
+    "title": "Mirë se u rikthyet",
+    "subtitle": "Hyni në panelin e hotelit tuaj.",
+    "email": "Email",
+    "password": "Fjalëkalimi",
+    "submit": "Hyni",
+    "submitting": "Duke hyrë…",
+    "or": "ose",
+    "demoTitle": "Provoni demon",
+    "demoSubtitle": "Hyni me një klik në Vala Resort & Spa. Të gjitha të dhënat janë fiktive.",
+    "panelCaption": "Vala Resort & Spa · Dhërmi · demo",
+    "panelCardLabel": "Përmbledhja e mëngjesit",
+    "panelCardBody": "Mirëmëngjes, Dritan. Dje fituat 4.280 €, 12% më shumë se java e kaluar.",
+    "panelQuote": "Hoteli juaj, i qetë si deti në mëngjes.",
+    "errors": {
+      "invalid": "Email ose fjalëkalim i gabuar.",
+      "missing": "Plotësoni email-in dhe fjalëkalimin.",
+      "notConfigured": "Supabase nuk është konfiguruar ende. Plotësoni .env.local (shih PLAN.md §17).",
+      "demoDisabled": "Hyrja demo është e çaktivizuar.",
+      "noMembership": "Llogaria juaj nuk është e lidhur me asnjë hotel."
+    }
+  },
+  "roles": {
+    "owner": "Pronar",
+    "manager": "Menaxher",
+    "receptionist": "Recepsion",
+    "housekeeping": "Pastrim",
+    "pos": "Bar & restorant",
+    "spa": "Spa",
+    "accountant": "Financa"
+  },
+  "nav": {
+    "groups": {
+      "operations": "Operacione",
+      "communication": "Komunikim",
+      "sales": "Shitje",
+      "finance": "Financa",
+      "system": "Sistemi"
+    },
+    "items": {
+      "today": "Sot",
+      "calendar": "Kalendari",
+      "bookings": "Rezervimet",
+      "rooms": "Dhomat",
+      "housekeeping": "Pastrimi",
+      "guests": "Mysafirët",
+      "inbox": "Mesazhet",
+      "pos": "Bar & restorant",
+      "spa": "Spa",
+      "invoices": "Faturat",
+      "expenses": "Shpenzimet",
+      "reports": "Raportet",
+      "channels": "Kanalet (OTA)",
+      "settings": "Cilësimet"
+    }
+  },
+  "shell": {
+    "demoBanner": "Demo · të gjitha të dhënat janë fiktive",
+    "simpleMode": "Modaliteti i thjeshtë",
+    "simpleModeHint": "Vetëm gjërat kryesore",
+    "openMenu": "Hap menunë",
+    "signOut": "Dilni",
+    "switchOrg": "Ndërroni hotelin",
+    "searchPlaceholder": "Pyet hotelin ose kërko…",
+    "greeting": {
+      "morning": "Mirëmëngjes",
+      "afternoon": "Mirëdita",
+      "evening": "Mirëmbrëma"
+    }
+  },
+  "command": {
+    "title": "Pyet hotelin",
+    "placeholder": "Pyet çdo gjë… p.sh. “Kush mbërrin nesër?”",
+    "ask": "Pyet hotelin",
+    "navigate": "Shko te",
+    "empty": "Asgjë nuk u gjet.",
+    "suggestions": "Provoni",
+    "s1": "Sa fitoi bari këtë javë?",
+    "s2": "Kush mbërrin nesër?",
+    "s3": "Cili kanal sjell më shumë para?",
+    "aiSoon": "Përgjigjet e AI-së lidhen me të dhënat e hotelit në Batch 15.",
+    "hintNavigate": "lëviz",
+    "hintSelect": "zgjidh"
+  },
+  "comingSoon": {
+    "eyebrow": "Në ndërtim",
+    "title": "{section} vjen së shpejti",
+    "body": "Ky modul ndërtohet në Batch {batch}. Të dhënat demo janë gati.",
+    "back": "Kthehu te Sot"
+  },
+  "dashboard": {
+    "subtitle": "Ja çfarë po ndodh sot në {org}.",
+    "placeholderBody": "Paneli i plotë me përmbledhjen e mëngjesit vjen në Batch 4."
   }
 }
