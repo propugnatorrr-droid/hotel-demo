@@ -60,4 +60,16 @@ export function at(d: string, hour: number, minute = 0): Date {
   return new Date(`${d}T${pad(hour)}:${pad(minute)}:00${tiranaOffset(d)}`);
 }
 
-export type Rng = ReturnType<typeof createRng>;
+export  function atRandom(d: string, fromHour: number, toHour: number, next: () => number): Date {
+  const minutes = Math.floor(fromHour * 60 + next() * (toHour - fromHour) * 60);
+  return at(d, Math.floor(minutes / 60), minutes % 60);
+}
+
+export function dayInTirana(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
