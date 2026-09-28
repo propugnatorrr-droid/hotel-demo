@@ -103,6 +103,12 @@ Owners in Albania have money but aren't very tech-savvy, so **simplicity is a fe
 - **Our weak spots:** new brand, no reviews yet. Competitors are established.
 - **Open task (Gerti):** get BESA's real prices and what owners complain about with them.
 
+### 5.1 Open-source research (2026-09-28)
+- **open-hotel-pms** (Next.js + Supabase, MIT): single-hotel, Thailand-specific, no AI/OTA/POS/fiscalization. Used for ideas only.
+- **Kamra PMS** (Frappe, AGPL-3.0), **HotelDruid** (AGPL), **QloApps** (OSL-3.0): **never copy code**. Copyleft would force us to publish our SaaS source.
+- **Pesan PMS** (Next.js, MIT): early stage, SQLite. Not useful.
+- Conclusion: build our own. Ideas adopted → §7.14.
+
 ---
 
 ## 6. Scope decisions
