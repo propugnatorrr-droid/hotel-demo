@@ -60,7 +60,7 @@ export function at(d: string, hour: number, minute = 0): Date {
   return new Date(`${d}T${pad(hour)}:${pad(minute)}:00${tiranaOffset(d)}`);
 }
 
-export  function atRandom(d: string, fromHour: number, toHour: number, next: () => number): Date {
+export function atRandom(d: string, fromHour: number, toHour: number, next: () => number): Date {
   const minutes = Math.floor(fromHour * 60 + next() * (toHour - fromHour) * 60);
   return at(d, Math.floor(minutes / 60), minutes % 60);
 }
