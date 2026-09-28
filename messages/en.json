@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "title": "Iliria · AI-powered hotel management",
+    "description": "Bookings, calendar, messages, invoices and reports in one place, with an AI assistant that speaks Albanian."
+  },
+  "common": {
+    "loading": "Loading…",
+    "demo": "Demo",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "search": "Search",
+    "language": "Language"
+  },
+  "theme": {
+    "toggle": "Change theme",
+    "auto": "Auto",
+    "day": "Day",
+    "night": "Night"
+  },
+  "home": {
+    "eyebrow": "AI-powered hotel management",
+    "title": "Your whole hotel, on one screen.",
+    "subtitle": "Bookings, calendar, messages, invoices and reports, with an AI assistant that speaks Albanian.",
+    "ctaDemo": "Enter the demo",
+    "ctaResort": "View the resort website",
+    "status": "Phase 1 · in progress"
+  }
+}
