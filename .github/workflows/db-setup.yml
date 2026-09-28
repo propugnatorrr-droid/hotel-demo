@@ -1,23 +1,20 @@
-name: Database setup (schema + SQL + demo seed)
+name: Database setup (manual)
 
 on:
   workflow_dispatch:
     inputs:
       push_schema:
-        description: 'Create/update tables (drizzle-kit push)'
+        description: Create/update tables
         type: boolean
         default: true
       run_sql:
-        description: 'Run supabase/sql/*.sql (only needed the first time)'
+        description: Run Supabase SQL files
         type: boolean
-        default: true
+        default: false
       seed:
-        description: 'Reset and seed the demo (Vala Resort & Spa)'
+        description: DANGER — delete and reload the Vala demo hotel's data
         type: boolean
-        default: true
-  schedule:
-    # Every night 03:30 UTC (05:30 Tirana): fresh demo dates + keeps Supabase awake
-    - cron: '30 3 * * *'
+        default: false
 
 concurrency:
   group: db-setup
@@ -49,17 +46,17 @@ jobs:
           done
 
       - name: Push schema
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.push_schema }}
+        if: ${{ inputs.push_schema }}
         run: npx drizzle-kit push --force
 
-      - name: Run Supabase SQL (auth trigger, RLS, storage, realtime)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_sql }}
+      - name: Run Supabase SQL
+        if: ${{ inputs.run_sql }}
         run: |
           for f in supabase/sql/*.sql; do
             echo "▶ $f"
             psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
           done
 
-      - name: Seed demo data
-        if: ${{ github.event_name == 'schedule' || inputs.seed }}
+      - name: Reset and seed Vala demo
+        if: ${{ inputs.seed }}
         run: npm run db:seed
