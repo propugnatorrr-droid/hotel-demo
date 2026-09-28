@@ -60,4 +60,4 @@ export function at(d: string, hour: number, minute = 0): Date {
   return new Date(`${d}T${pad(hour)}:${pad(minute)}:00${tiranaOffset(d)}`);
 }
 
-export
+export type Rng = ReturnType<typeof createRng>;
