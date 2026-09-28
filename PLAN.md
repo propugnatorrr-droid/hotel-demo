@@ -576,3 +576,21 @@ See `.env.example`. Core: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBL
 - 2026-09-28: Batch 2 delivered (+ fixes: `onDelete 'no action'`, boolean payment flags, `@theme static`, dates.ts paste error). Open-source research done (§5.1).
 - 2026-09-28: Batch 3 delivered.
 - 2026-09-28 · Batch 4 delivered. Added `radix-ui` to package.json (was missing). Added `.github/workflows/db-setup.yml` (schema push + SQL + seed from GitHub, nightly re-seed). Morning briefing is template-based for now (live data, Albanian-first ICU messages); Batch 15 swaps it for the AI version. Charts are hand-built (div/SVG + Motion), no visx, to keep the bundle small. Alert titles are stored in Albanian in the DB (English UI shows them in Albanian until Batch 15 localizes them).
+- [x] Batch 5: authenticated room explorer, live room states and occupants,
+  housekeeping task board with real DB transitions, maintenance reporting and
+  resolution, audit events, and OpenRouter staff assistant with bounded read
+  tools and human-confirmed housekeeping proposals.
+- [ ] Batch 5 follow-up: interactive room layout editing; staff assignment
+  controls; race-safe DB constraints for out-of-order rooms; atomic AI rate
+  limiting; full guest/customer AI with public-session protections.
+- [ ] Batch 6: bookings, guests and folios.
+Operational demo data is never automatically reset. The GitHub database
+workflow is manual; seeding destroys and recreates Vala's records. Never run
+the seed against a real hotel's data.
+
+OpenRouter is optional and billed by usage. OPENROUTER_API_KEY and
+OPENROUTER_MODEL are server-only Vercel environment variables. Staff AI reads
+only a bounded, hotel-scoped set of operations data. Its sole mutation path is
+a displayed proposal that a human confirms through the same validated Server
+Action used by the manual UI. Guest-facing AI is a separate security boundary
+and is not implemented by this staff endpoint.
