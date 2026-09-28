@@ -1,0 +1,29 @@
+{
+  "metadata": {
+    "title": "Iliria · Sistem menaxhimi për hotele, me AI",
+    "description": "Rezervime, kalendar, mesazhe, fatura dhe raporte në një vend, me një asistent AI që flet shqip."
+  },
+  "common": {
+    "loading": "Duke u ngarkuar…",
+    "demo": "Demo",
+    "save": "Ruaj",
+    "cancel": "Anulo",
+    "close": "Mbyll",
+    "search": "Kërko",
+    "language": "Gjuha"
+  },
+  "theme": {
+    "toggle": "Ndrysho temën",
+    "auto": "Automatik",
+    "day": "Ditë",
+    "night": "Natë"
+  },
+  "home": {
+    "eyebrow": "Sistem menaxhimi për hotele, me AI",
+    "title": "Gjithë hoteli juaj, në një ekran.",
+    "subtitle": "Rezervime, kalendar, mesazhe, fatura dhe raporte, me një asistent AI që flet shqip.",
+    "ctaDemo": "Hyni në demo",
+    "ctaResort": "Shikoni faqen e resortit",
+    "status": "Faza 1 · në ndërtim"
+  }
+}
