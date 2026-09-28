@@ -562,3 +562,5 @@ See `.env.example`. Core: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBL
 
 ## 21. Changelog
 - 2026-09-28: Plan created. Batch 1 delivered.
+- 2026-09-28: Batch 2 delivered (+ fixes: `onDelete 'no action'`, boolean payment flags, `@theme static`, dates.ts paste error). Open-source research done (§5.1).
+- 2026-09-28: Batch 3 delivered.
