@@ -43,7 +43,7 @@
     "errors": {
       "invalid": "Email ose fjalëkalim i gabuar.",
       "missing": "Plotësoni email-in dhe fjalëkalimin.",
-      "notConfigured": "Supabase nuk është konfiguruar ende. Plotësoni .env.local (shih PLAN.md §17).",
+      "notConfigured": "Supabase nuk është konfiguruar ende. Plotësoni variablat e mjedisit (shih PLAN.md §17).",
       "demoDisabled": "Hyrja demo është e çaktivizuar.",
       "noMembership": "Llogaria juaj nuk është e lidhur me asnjë hotel."
     }
@@ -116,8 +116,107 @@
     "body": "Ky modul ndërtohet në Batch {batch}. Të dhënat demo janë gati.",
     "back": "Kthehu te Sot"
   },
+  "sources": {
+    "direct": "Direkt",
+    "website": "Faqja jonë",
+    "booking_com": "Booking.com",
+    "airbnb": "Airbnb",
+    "expedia": "Expedia",
+    "agoda": "Agoda",
+    "whatsapp": "WhatsApp",
+    "instagram": "Instagram",
+    "messenger": "Messenger",
+    "phone": "Telefon",
+    "ai_voice": "AI me zë",
+    "walk_in": "Në recepsion"
+  },
+  "roomStatus": {
+    "clean": "E pastër",
+    "dirty": "E papastër",
+    "inspected": "E kontrolluar",
+    "out_of_order": "Jashtë shërbimit"
+  },
   "dashboard": {
     "subtitle": "Ja çfarë po ndodh sot në {org}.",
-    "placeholderBody": "Paneli i plotë me përmbledhjen e mëngjesit vjen në Batch 4."
+    "briefing": {
+      "eyebrow": "Përmbledhja e ditës",
+      "revenue": "Dje fituat <b>{amount}</b>, {dir, select, up {<b>{pct}</b> më shumë se} down {<b>{pct}</b> më pak se} other {njësoj si}} e njëjta ditë e javës së kaluar.",
+      "revenueNoCompare": "Dje fituat <b>{amount}</b>.",
+      "occupancy": "Sonte hoteli është <b>{occ}</b> i zënë ({occupied} nga {total} dhoma).",
+      "movements": "Sot mbërrijnë <b>{arrivals, plural, =0 {asnjë rezervim} one {# rezervim} other {# rezervime}}</b>{vip, plural, =0 {} other {, prej tyre # VIP}}, dhe lirohen {departures, plural, =0 {asnjë dhomë} one {# dhomë} other {# dhoma}}.",
+      "peak": "Dita më e ngarkuar e javës është {day}, me <b>{occ}</b> të zënë.",
+      "attention": "<b>{count, plural, one {# gjë kërkon} other {# gjëra kërkojnë}}</b> vëmendjen tuaj.",
+      "allGood": "Asgjë urgjente. Ditë e qetë, si deti në mëngjes.",
+      "actionAlerts": "Shiko alarmet",
+      "actionInbox": "Hap mesazhet",
+      "actionCalendar": "Hap kalendarin"
+    },
+    "kpi": {
+      "revenueYesterday": "Të ardhurat dje",
+      "vsLastWeek": "{dir, select, up {↑ {pct}} down {↓ {pct}} other {Njësoj}} krahasuar me javën e kaluar",
+      "noCompare": "Pa krahasim me javën e kaluar",
+      "occupancyTonight": "Zënia sonte",
+      "roomsOf": "{occupied} nga {total} dhoma",
+      "adr": "Çmimi mesatar për natë",
+      "revpar": "RevPAR dje: {value}",
+      "movements": "Mbërritje · largime",
+      "inHouseNow": "{count, plural, one {# dhomë me mysafirë tani} other {# dhoma me mysafirë tani}}",
+      "inHouse": "Në hotel tani",
+      "arrivalsToday": "{count, plural, one {# mbërritje sot} other {# mbërritje sot}}",
+      "housekeeping": "Pastrimi sot",
+      "housekeepingSub": "{done} të kryera · {inProgress} në punë"
+    },
+    "revenue": {
+      "title": "Të ardhurat",
+      "subtitle": "14 ditët e fundit · kaloni mbi një ditë",
+      "rooms": "Dhoma",
+      "fb": "Bar & restorant",
+      "spa": "Spa",
+      "today": "sot, deri tani"
+    },
+    "movement": {
+      "title": "Lëvizjet e sotme",
+      "arrivals": "Mbërritje",
+      "departures": "Largime",
+      "emptyArrivals": "Asnjë mbërritje sot.",
+      "emptyDepartures": "Asnjë largim sot.",
+      "room": "Dhoma {number}",
+      "noRoom": "Pa dhomë",
+      "nights": "{count, plural, one {# natë} other {# net}}",
+      "guests": "{adults, plural, one {# i rritur} other {# të rritur}}{children, plural, =0 {} one {, # fëmijë} other {, # fëmijë}}",
+      "eta": "Mbërrin rreth {time}",
+      "expected": "Pritet sot",
+      "tentative": "E pakonfirmuar",
+      "arrived": "Ka mbërritur",
+      "departed": "U largua",
+      "toCheckOut": "Largohet sot",
+      "balance": "Për të paguar {amount}"
+    },
+    "alerts": {
+      "title": "Kërkojnë vëmendje",
+      "subtitle": "Alarmet automatike për paratë dhe operacionet",
+      "empty": "Asnjë alarm. Gjithçka në rregull.",
+      "inbox": "{count, plural, one {# bisedë pret përgjigjen tuaj} other {# biseda presin përgjigjen tuaj}}",
+      "severity": {
+        "info": "Info",
+        "warning": "Kujdes",
+        "critical": "Urgjent"
+      }
+    },
+    "rooms": {
+      "title": "Gjendja e dhomave",
+      "tasks": "Detyra sot: {open} të hapura · {inProgress} në punë · {done} të kryera"
+    },
+    "forecast": {
+      "title": "Zënia, 7 ditët e ardhshme",
+      "today": "Sot"
+    },
+    "channels": {
+      "title": "Nga vijnë rezervimet",
+      "subtitle": "Rezervimet e reja, 30 ditët e fundit",
+      "bookings": "{count, plural, one {# rezervim} other {# rezervime}}",
+      "commission": "Komisione për OTA-të: <b>{amount}</b>. Çdo rezervim direkt i mban këto para në hotel.",
+      "empty": "Asnjë rezervim i ri këtë muaj."
+    }
   }
 }
