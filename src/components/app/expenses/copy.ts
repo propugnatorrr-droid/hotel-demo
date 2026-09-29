@@ -1,0 +1,61 @@
+import { makeCopy } from '@/lib/copy';
+
+const sq = {
+  eyebrow: 'Shpenzime dhe fitim',
+  title: 'Foto e faturës, pjesa tjetër e bën AI.',
+  subtitle: 'Fotografo faturën e furnitorit dhe AI lexon furnitorin, shumën, TVSH-në dhe kategorinë. Fitimi llogaritet vetë çdo muaj.',
+  scan: 'Skano faturën me AI',
+  scanning: 'AI po lexon…',
+  add: 'Shto shpenzim',
+  month: 'Muaji',
+  all: 'Të gjitha',
+  search: 'Kërko furnitor, faturë…',
+  total: 'Shpenzimet e muajit',
+  empty: 'Asnjë shpenzim këtu.',
+  profit: 'Fitimi sipas muajve',
+  profitHint: (fx: number) => `Shpenzimet në lekë konvertohen me 1 € = ${fx} L. Ndryshoje te Cilësimet.`,
+  income: 'Të ardhura',
+  expenses: 'Shpenzime',
+  net: 'Fitim',
+  incomeParts: { rooms: 'Dhoma', fb: 'Restorant & bar', spa: 'Spa' },
+  byDept: 'Sipas departamentit',
+  dept: { rooms: 'Dhoma', restaurant: 'Restorant', bar: 'Bar', spa: 'Spa', maintenance: 'Mirëmbajtje', marketing: 'Marketing', admin: 'Administrata', staff: 'Staf', other: 'Të tjera' } as Record<string, string>,
+  form: {
+    title: 'Shpenzim', supplier: 'Furnitori', nipt: 'NIPT i furnitorit', invoice: 'Nr. i faturës', category: 'Kategoria', department: 'Departamenti', description: 'Përshkrimi',
+    amount: 'Shuma (me TVSH)', vat: 'TVSH', currency: 'Monedha', date: 'Data', method: 'Pagesa', save: 'Ruaj', cancel: 'Mbyll', delete: 'Fshi', receipt: 'Shiko faturën', aiRead: (c: number) => `AI e lexoi me ${Math.round(c * 100)}% siguri. Kontrollo para se ta ruash.`,
+  },
+  methods: { cash: 'Cash', card: 'Kartë', bank_transfer: 'Bankë', online: 'Online' } as Record<string, string>,
+  scanErrors: { ai_off: 'AI nuk është konfiguruar (OPENROUTER_API_KEY).', limit: 'Kufiri orar u arrit.', failed: 'Nuk u lexua dot. Provo një foto më të qartë ose plotëso vetë.', unread: 'AI nuk e njohu si faturë. Plotëso vetë.', forbidden: 'Nuk ke leje.' } as Record<string, string>,
+  errors: { invalid: 'Kontrollo fushat.', forbidden: 'Nuk ke leje.', module: 'Moduli është i çaktivizuar.', notFound: 'Nuk u gjet.', unknown: 'Diçka shkoi keq.' } as Record<string, string>,
+};
+
+const en: typeof sq = {
+  eyebrow: 'Expenses and profit',
+  title: 'Snap the receipt, AI does the rest.',
+  subtitle: 'Photograph a supplier invoice and the AI reads supplier, amount, VAT and category. Profit is calculated every month by itself.',
+  scan: 'Scan receipt with AI',
+  scanning: 'AI is reading…',
+  add: 'Add expense',
+  month: 'Month',
+  all: 'All',
+  search: 'Search supplier, invoice…',
+  total: 'This month’s expenses',
+  empty: 'No expenses here.',
+  profit: 'Profit by month',
+  profitHint: (fx) => `Lek expenses are converted at €1 = ${fx} L. Change it in Settings.`,
+  income: 'Income',
+  expenses: 'Expenses',
+  net: 'Profit',
+  incomeParts: { rooms: 'Rooms', fb: 'Restaurant & bar', spa: 'Spa' },
+  byDept: 'By department',
+  dept: { rooms: 'Rooms', restaurant: 'Restaurant', bar: 'Bar', spa: 'Spa', maintenance: 'Maintenance', marketing: 'Marketing', admin: 'Administration', staff: 'Staff', other: 'Other' },
+  form: {
+    title: 'Expense', supplier: 'Supplier', nipt: 'Supplier tax ID', invoice: 'Invoice no.', category: 'Category', department: 'Department', description: 'Description',
+    amount: 'Amount (incl. VAT)', vat: 'VAT', currency: 'Currency', date: 'Date', method: 'Payment', save: 'Save', cancel: 'Close', delete: 'Delete', receipt: 'View receipt', aiRead: (c) => `AI read this with ${Math.round(c * 100)}% confidence. Review before saving.`,
+  },
+  methods: { cash: 'Cash', card: 'Card', bank_transfer: 'Bank', online: 'Online' },
+  scanErrors: { ai_off: 'AI is not configured (OPENROUTER_API_KEY).', limit: 'Hourly limit reached.', failed: 'Could not read it. Try a clearer photo or fill in manually.', unread: 'AI did not recognise a receipt. Fill in manually.', forbidden: 'Not allowed.' },
+  errors: { invalid: 'Check the fields.', forbidden: 'Not allowed.', module: 'Module disabled.', notFound: 'Not found.', unknown: 'Something went wrong.' },
+};
+
+export const pickExpensesCopy = makeCopy(sq, en);
