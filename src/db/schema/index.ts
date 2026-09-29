@@ -8,3 +8,4 @@ export * from './pos';
 export * from './finance';
 export * from './messaging';
 export * from './ops';
+export * from './channels';
