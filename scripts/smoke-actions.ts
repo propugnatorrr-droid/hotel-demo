@@ -141,4 +141,31 @@ export async function runActions(opts: { db: never; ctx: never; org: { id: strin
     const c = await check('LLM agent answers a data question with tools', () => run('Sa është pushtimi i 7 ditëve të fundit?', true), (ev) => (ev.some((e) => e.type === 'tool' && /kpi|occupancy/i.test(String(e.name))) ? null : JSON.stringify(ev.map((e) => e.type + ':' + (e.name ?? '')))));
     console.log('    answer:', (c?.find((e) => e.type === 'answer')?.text as string | undefined)?.slice(0, 260));
   }
+  // Guest profile: 360 view, notes, preferences, flags, duplicate merge, GDPR erase.
+  const gp = await import('../src/server/queries/guest-profile');
+  const GA = await import('../src/server/actions/guest-profile');
+  const { guests: G } = schema;
+  const [somebody] = await db.select({ id: G.id }).from(G).innerJoin(B, eq(B.guestId, G.id)).where(eq(B.status, 'checked_out')).limit(1);
+  const prof = await check('guest profile 360 loads', () => gp.getGuestProfile(ctx, somebody!.id, 'sq'), (r) => (r && r.stats.stays > 0 && r.timeline.length > 0 ? null : JSON.stringify(r?.stats)));
+  if (prof) console.log('    tier', prof.stats.tier, 'segments', prof.stats.segments.join(','), 'score', prof.stats.score, 'timeline', prof.timeline.length, 'spend types', prof.spend.length);
+  await check('add pinned note', () => GA.addGuestNote({ guestId: somebody!.id, text: 'Pëlqen dhomën me pamje nga deti', pinned: true }), ok);
+  await check('save preferences incl. allergy', () => GA.saveGuestPreferences({ guestId: somebody!.id, preferences: { allergies: ['Arra'], room: ['Kat i lartë'], occasions: [{ label: 'Përvjetori', date: '06-14' }] } }), ok);
+  await check('toggle VIP + tags', () => GA.setGuestFlags({ guestId: somebody!.id, isVip: true, tags: ['wine', 'honeymoon'] }), ok);
+  const after = await gp.getGuestProfile(ctx, somebody!.id, 'sq');
+  await check('profile reflects note, allergy, vip', async () => after, (r) => (r && r.notes.some((n) => n.pinned) && r.guest.preferences.allergies?.includes('Arra') && r.guest.isVip ? null : 'not reflected'));
+  const [src] = await db.select().from(G).where(eq(G.id, somebody!.id));
+  const [dup] = await db.insert(G).values({ orgId: org.id, firstName: src!.firstName, lastName: src!.lastName, email: src!.email, phone: '+355690009999' }).returning();
+  await db.insert(B).values({ orgId: org.id, code: 'BK-DUPTST', guestId: dup!.id, roomTypeId: t2!.id, checkIn: addDays(today, 300), checkOut: addDays(today, 302), status: 'confirmed', totalAmount: 100 });
+  const withDup = await gp.getGuestProfile(ctx, somebody!.id, 'sq');
+  await check('duplicate detected by email+name', async () => withDup?.duplicates, (d) => (d?.some((x) => x.id === dup!.id && x.why.includes('email')) ? null : JSON.stringify(d)));
+  await check('merge duplicate moves bookings', () => GA.mergeGuests({ keepId: somebody!.id, dropId: dup!.id }), (r) => ((r as R).ok && (r as { data: { moved: number } }).data.moved === 1 ? null : JSON.stringify(r)));
+  const [gone] = await db.select().from(G).where(eq(G.id, dup!.id));
+  await check('duplicate deleted after merge', async () => gone, (x) => (x ? 'still exists' : null));
+  await check('anonymize refused with active booking', () => GA.anonymizeGuest(somebody!.id), (r) => ((r as R).error === 'activeBooking' ? null : JSON.stringify(r)));
+  const [lonely] = await db.insert(G).values({ orgId: org.id, firstName: 'Erase', lastName: 'Me', email: 'erase@example.com', phone: '+355690001234' }).returning();
+  await check('anonymize (GDPR erase)', () => GA.anonymizeGuest(lonely!.id), ok);
+  const [erased] = await db.select().from(G).where(eq(G.id, lonely!.id));
+  await check('personal data erased', async () => erased, (x) => (x && !x.email && !x.phone && x.firstName === 'Anonim' ? null : JSON.stringify(x)));
+  await check('agent: get_guest_profile', () => agent.executeTool(ctx, 'get_guest_profile', { guest_id: somebody!.id }, 'auto'), (r) => (r.ok ? null : JSON.stringify(r)));
+
 }

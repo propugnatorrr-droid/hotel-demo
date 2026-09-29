@@ -230,6 +230,30 @@ export async function main() {
   for (const b of bookingRows) if (b.status !== 'cancelled') stays.set(b.guestId, (stays.get(b.guestId) ?? 0) + 1);
   for (const g of guestRows) if ((stays.get(g.id) ?? 0) > 1) g.tags = [...(g.tags ?? []), 'returning'];
 
+  // Rich profiles: birthdays, preferences, allergies, special dates (so guest pages feel alive).
+  const PREFS = {
+    room: ['Kat i lartë', 'Pamje nga deti', 'Larg ashensorit', 'Dhomë e qetë', 'Ballkon', 'Pranë pishinës'],
+    pillow: ['Jastëk i butë', 'Jastëk i fortë', 'Jastëk shtesë', 'Pa pupla'],
+    dietary: ['Vegjetarian', 'Pa gluten', 'Kafe e zezë', 'Mëngjes në dhomë', 'Halal'],
+    allergies: ['Arra', 'Fruta deti', 'Laktozë', 'Kikirikë'],
+    interests: ['Spa', 'Verë', 'Plazh', 'Ecje në mal', 'Gatim tradicional', 'Kulturë'],
+    transport: ['Transfertë nga aeroporti', 'Parkim', 'Makinë me qira'],
+  };
+  for (const g of guestRows) {
+    if (rng.chance(0.55)) g.dateOfBirth = `${rng.int(1956, 2001)}-${String(rng.int(1, 12)).padStart(2, '0')}-${String(rng.int(1, 28)).padStart(2, '0')}`;
+    if (rng.chance(0.6)) g.city = rng.pick(['Tiranë', 'Milano', 'Roma', 'München', 'London', 'Prishtinë', 'Kraków', 'New York', 'Durrës', 'Vlorë']);
+    const pick = (list: string[], n: number) => rng.shuffle([...list]).slice(0, n);
+    const prefs: Record<string, unknown> = {};
+    if (rng.chance(0.5)) prefs.room = pick(PREFS.room, rng.int(1, 3));
+    if (rng.chance(0.3)) prefs.pillow = pick(PREFS.pillow, 1);
+    if (rng.chance(0.35)) prefs.dietary = pick(PREFS.dietary, rng.int(1, 2));
+    if (rng.chance(0.12)) prefs.allergies = pick(PREFS.allergies, 1);
+    if (rng.chance(0.45)) prefs.interests = pick(PREFS.interests, rng.int(1, 3));
+    if (rng.chance(0.25)) prefs.transport = pick(PREFS.transport, 1);
+    if (rng.chance(0.15)) prefs.occasions = [{ label: rng.pick(['Përvjetori i martesës', 'Muaj mjalti', 'Ditëlindja e partnerit']), date: `${String(rng.int(5, 9)).padStart(2, '0')}-${String(rng.int(1, 28)).padStart(2, '0')}` }];
+    g.preferences = prefs;
+  }
+
   // ─── Outlets & menus ─────────────────────────────────────
   const outletRows: Insert<typeof s.outlets>[] = [];
   const categoryRows: Insert<typeof s.productCategories>[] = [];
@@ -534,7 +558,21 @@ export async function main() {
     },
   };
 
+  const NOTES = [
+    'Pëlqen dhomën me pamje nga deti, kërkoji gjithmonë katin e tretë.',
+    'Vjen për përvjetorin e martesës çdo vit. Përgatit verë dhe lule.',
+    'Kërkoi transfertë nga Rinasi herën e fundit, pyete sërish.',
+    'Shumë i sjellshëm me stafin, la bakshish të mirë në restorant.',
+    'Ankohet për zhurmën nëse është pranë ashensorit.',
+    'Porosit gjithmonë peshk të freskët dhe verë të bardhë shqiptare.',
+    'Udhëton me fëmijë të vegjël: krevat fëmijësh dhe karrige ushqimi.',
+  ];
+  const noteRows: Insert<typeof s.auditLogs>[] = guestRows
+    .filter((g) => g.isVip || (stays.get(g.id) ?? 0) > 1)
+    .slice(0, 40)
+    .flatMap((g, i) => Array.from({ length: rng.int(1, 3) }, (_, k) => ({ orgId, userId: rng.pick([userIds.receptionist, userIds.manager, userIds.owner]), action: 'guest.note', entityType: 'guest', entityId: g.id, meta: { text: NOTES[(i + k) % NOTES.length], pinned: k === 0 && (g.isVip ?? false) }, createdAt: minutesAgo(rng.int(600, 60000)) })));
   const auditRows: Insert<typeof s.auditLogs>[] = [
+    ...noteRows,
     ...(suspicious ? [{ orgId, userId: userIds.pos, action: 'pos.discount_applied', entityType: 'pos_order', entityId: suspicious.id!, meta: { percent: 40 }, createdAt: suspicious.paidAt ?? minutesAgo(600) }] : []),
     { orgId, userId: userIds.receptionist, action: 'cash_shift.closed', entityType: 'cash_shift', entityId: badShiftId, meta: { difference: -40 }, createdAt: at(yesterday, 23, 2) },
     { orgId, userId: userIds.manager, action: 'room.out_of_order', entityType: 'room', entityId: roomId(D.OUT_OF_ORDER_ROOM), meta: {}, createdAt: minutesAgo(900) },

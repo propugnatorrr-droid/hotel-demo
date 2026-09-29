@@ -184,7 +184,7 @@ function ThreadPane({ thread, locale, back }: { thread: Thread; locale: string; 
 
       {(thread.guest || thread.booking) && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border bg-surface-2/60 px-4 py-2 text-xs text-muted">
-          {thread.guest && <span>{t.guest}: <b className="text-foreground">{thread.guest.firstName} {thread.guest.lastName}</b> · {t.stays(thread.guest.stays)}</span>}
+          {thread.guest && <IntlLink href={`/app/guests/${thread.guest.id}`} className="hover:underline">{t.guest}: <b className="text-foreground">{thread.guest.firstName} {thread.guest.lastName}</b> · {t.stays(thread.guest.stays)} <ArrowUpRight className="inline size-3" /></IntlLink>}
           {thread.booking && (
             <IntlLink href={`/app/bookings?b=${thread.booking.id}`} className="inline-flex items-center gap-1 text-foreground hover:underline">
               {t.booking}: {thread.booking.code} · {formatDay(thread.booking.checkIn, locale, { day: 'numeric', month: 'short' })} → {formatDay(thread.booking.checkOut, locale, { day: 'numeric', month: 'short' })} <ArrowUpRight className="size-3" />

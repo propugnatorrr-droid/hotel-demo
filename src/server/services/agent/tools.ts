@@ -9,6 +9,7 @@ import { assignRoom, cancelBooking, checkInBooking, checkOutBooking, confirmBook
 import { moveBooking, setRates } from '@/server/actions/calendar';
 import { resolveAlert, applyPricingSuggestion } from '@/server/actions/alerts';
 import { saveExpense } from '@/server/actions/expenses';
+import { addGuestNote } from '@/server/actions/guest-profile';
 import { sendStaffMessage } from '@/server/actions/inbox';
 import { cancelInvoice, fiscalizeInvoiceAction, issueInvoice } from '@/server/actions/invoices';
 import { changeRoomStatus, createHousekeepingTask, createMaintenanceTicket } from '@/server/actions/operations';
@@ -21,6 +22,7 @@ import { listConversations } from '@/server/queries/inbox';
 import { listInvoices } from '@/server/queries/invoices';
 import { getOperations } from '@/server/queries/operations';
 import { getSpa } from '@/server/queries/spa';
+import { getGuestProfile } from '@/server/queries/guest-profile';
 import { quoteStay } from '@/server/services/stay';
 
 export type AgentToolDef = {
@@ -126,6 +128,9 @@ export const AGENT_TOOLS: AgentToolDef[] = [
     run: async (ctx, a) => { const types = await db.select().from(roomTypes).where(and(eq(roomTypes.orgId, ctx.org.id), eq(roomTypes.isActive, true))); const out = []; for (const t of types) { const q = await quoteStay(db, { orgId: ctx.org.id, roomTypeId: t.id, checkIn: str(a.checkIn), checkOut: str(a.checkOut), guests: Number(a.adults) || 2, enforceRules: false }); out.push(q.ok ? { type: t.code, id: t.id, available: q.available, total: q.total, nights: q.nights, warnings: q.warnings } : { type: t.code, id: t.id, available: false, reason: q.reason }); } return out; } },
   { name: 'find_guests', kind: 'read', roles: FRONT, module: 'pms', label: { sq: 'Kërkoj mysafirët', en: 'Searching guests' }, description: 'Search guests by name, email or phone.', parameters: obj({ query: S }, ['query']),
     run: async (ctx, a) => (await listGuests(ctx, str(a.query))).slice(0, 15).map((g) => ({ id: g.id, name: `${g.firstName} ${g.lastName}`, email: g.email, phone: g.phone, vip: g.isVip, stays: g.stays, spent: g.value })) },
+  { name: 'get_guest_profile', kind: 'read', roles: FRONT, module: 'pms', label: { sq: 'Hap profilin e mysafirit', en: 'Opening the guest profile' }, description: 'Full guest intelligence: tier, lifetime value, stays, preferences, allergies, favourite items, pinned notes, next stay, duplicates. guest_id from find_guests.', parameters: obj({ guest_id: S }, ['guest_id']),
+    run: async (ctx, a) => { const p = await getGuestProfile(ctx, str(a.guest_id), 'en'); if (!p) throw new Error('guest not found'); return { guest: p.guest, stats: p.stats, spend: p.spend, favourites: p.favourites, next: p.next, inHouse: p.inHouse, birthday: p.birthday, pinnedNotes: p.notes.filter((n) => n.pinned).map((n) => n.text), duplicates: p.duplicates, recentStays: p.stayList.slice(0, 5) }; } },
+  { name: 'add_guest_note', kind: 'write', risk: 'safe', roles: FRONT, module: 'pms', label: { sq: 'Shtoj shënim te mysafiri', en: 'Adding a guest note' }, description: 'Add a note to a guest profile (visible to all staff).', parameters: obj({ guest_id: S, text: S, pinned: B }, ['guest_id', 'text']), summarize: (a, l) => t2(l, `Shënim: “${str(a.text).slice(0, 100)}”`, `Note: “${str(a.text).slice(0, 100)}”`), run: async (_c, a) => act(addGuestNote({ guestId: str(a.guest_id), text: str(a.text), pinned: a.pinned === true })) },
   { name: 'get_kpis', kind: 'read', roles: FIN, label: { sq: 'Llogaris treguesit', en: 'Calculating KPIs' }, description: 'Revenue, occupancy, ADR, RevPAR, bookings for a date range.', parameters: obj({ from: DATE, to: DATE }, ['from', 'to']), run: (ctx, a) => getPeriodStats(ctx, str(a.from), str(a.to)) },
   { name: 'revenue_by_channel', kind: 'read', roles: FIN, label: { sq: 'Analizoj kanalet', en: 'Analysing channels' }, description: 'Revenue and commission per booking source.', parameters: obj({ from: DATE, to: DATE }, ['from', 'to']), run: (ctx, a) => getChannelBreakdown(ctx, str(a.from), str(a.to)) },
   { name: 'sales_by_outlet', kind: 'read', roles: FIN, label: { sq: 'Shikoj shitjet', en: 'Reading sales' }, description: 'POS sales per outlet.', parameters: obj({ from: DATE, to: DATE }, ['from', 'to']), run: (ctx, a) => getOutletSales(ctx, str(a.from), str(a.to)) },

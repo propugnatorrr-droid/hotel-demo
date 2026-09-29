@@ -182,7 +182,7 @@ export function BookingsWorkspace({ rows, counts, view, q, detail, form, today, 
               money={money}
               manager={manager}
               today={today}
-              guestHref={`${pathname.replace(/\/bookings$/, '/guests')}?g=${detail.guestId}`}
+              guestHref={`${pathname.replace(/\/bookings$/, '/guests')}/${detail.guestId}`}
             />
           )}
         </SheetContent>

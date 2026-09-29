@@ -70,7 +70,7 @@ export function GuestsDirectory({
           <button
             key={g.id}
             type="button"
-            onClick={() => router.push(href(g.id), { scroll: false })}
+            onClick={() => router.push(`${pathname}/${g.id}`)}
             className="group rounded-xl border border-border bg-surface p-5 text-left shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-lift"
           >
             <div className="flex items-start justify-between gap-3">

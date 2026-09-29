@@ -401,3 +401,8 @@ p { line-height: 1.7; }
 
 /* Interactive surfaces feel alive by default. */
 button, [role='button'], a { transition-property: color, background-color, border-color, box-shadow, transform, opacity; transition-duration: 200ms; transition-timing-function: var(--ease-out-expo); }
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
