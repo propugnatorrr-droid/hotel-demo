@@ -605,3 +605,29 @@ and is not implemented by this staff endpoint.
   staff AI. Double booking prevented by advisory lock per room type plus the
   DB exclusion constraint in supabase/sql/06.
 - [ ] Batch 7: calendar/tape chart with drag-to-move using assignRoom.
+
+## 22. Build status (2026-09-29)
+
+Batches 7-19 delivered in one pass. Everything below is real and DB-backed (no hardcoded feature data); demo data
+comes only from the seed.
+
+- [x] Batch 7: master calendar (drag-and-drop move, edge-drag extend, quick booking, bulk rates, live availability, Supabase Realtime)
+- [x] Batch 8: integration registry (mock/sandbox/live), iCal import + signed per-room export feeds, Channex push, channel manager UI, iCal cron
+- [x] Batch 9: resort website `/r/[slug]`, booking engine, payments adapter (mock checkout, Paysera signed request + verified callback), confirmation pages
+- [x] Batch 10: guest AI concierge (OpenRouter tool-calling: rooms, live availability, booking, spa/dining, handoff), polling web chat
+- [x] Batch 11: unified inbox, Meta webhook (WhatsApp/IG/Messenger, signature verified), passport OCR check-in, AI reply drafts, journey automations (pre-arrival, welcome, review, return offer)
+- [x] Batch 12: POS (tables, orders, room charge, stock + low-stock alerts, discount limits) and spa scheduling (therapist conflicts, charge to room)
+- [x] Batch 13: invoicing (sequential numbers, VAT, NIVF/NSLF/QR, cancel), fiscal adapter, printable A4, cash shifts with difference alerts
+- [x] Batch 14: expenses, receipt OCR (private bucket), profit overview with FX conversion
+- [x] Batch 15: owner AI "Pyet hotelin" (⌘K + page), AI morning report (+ Telegram/WhatsApp delivery), anomaly and pricing alerts with one-click apply, daily cron
+- [x] Batch 16: reports (KPIs vs previous period, daily revenue, channels, outlets, activity log), CSV exports, printable PDF
+- [x] Batch 17: settings (profile, AI persona, room types/rooms, team invites), super-admin console, plans and module toggles, cash payment tracking
+- [x] Batch 18: voice assistant (Vapi server URL for tools + end-of-call report, call log UI, Albanian assistant config generator)
+- [x] Batch 19: marketing site (Albanian-first, animated), lead form, CI, smoke test
+
+### Known follow-ups
+- Provider payloads (Channex, fiscal provider, Vapi voice quality in Albanian) are unverified against live accounts.
+- Interactive floor-plan editing, atomic Redis rate limiting, night audit, room-move UI, duplicate-guest merge (PLAN 7.14).
+- Offline fiscalization, guest/staff native apps, HR/accounting apps remain roadmap.
+- Real photos: room type `images` and org `coverImageUrl` are editable in Settings; the site uses generated art until then.
+

@@ -24,7 +24,7 @@ export function SeaHero({ className }: { className?: string }) {
           </linearGradient>
         </defs>
         <rect width="1600" height="900" fill="url(#sky)" />
-        <motion.circle cx="800" cy="520" r="260" fill="url(#sun)" animate={{ r: [250, 275, 250] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }} />
+        <motion.circle cx="800" cy="520" initial={{ r: 250 }} fill="url(#sun)" animate={{ r: [250, 275, 250] }} transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }} />
         <circle cx="800" cy="520" r="74" fill="#fff3c9" opacity="0.95" />
         {[0, 1, 2, 3].map((i) => (
           <motion.path

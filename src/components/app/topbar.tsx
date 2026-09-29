@@ -30,6 +30,7 @@ export async function Topbar({ ctx, navKeys }: { ctx: OrgContext; navKeys: strin
           email={ctx.user.email}
           role={ctx.role}
           avatarUrl={ctx.profile.avatarUrl}
+          superAdmin={ctx.profile.isSuperAdmin}
         />
       </div>
     </header>

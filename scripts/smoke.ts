@@ -173,7 +173,7 @@ async function main() {
 
   const invoicing = await import('../src/server/services/invoicing');
   await check('invoice number sequence', () => db.transaction(async (tx) => invoicing.nextInvoiceNumber(tx as never, org.id, 2099)), (r) => (r === '1/2099' ? null : r));
-  const [{ id: someFolio }] = (await db.select({ id: schema.folios.id }).from(schema.folios).limit(1)) as { id: string }[];
+  const someFolio = (await db.select({ id: schema.folios.id }).from(schema.folios).limit(1))[0]!.id;
   await check('lines for folio', () => db.transaction(async (tx) => invoicing.linesForFolio(tx as never, org.id, someFolio)), (r) => (r.lines.length ? null : 'empty'));
 
   const ical = await import('../src/lib/integrations/ical');

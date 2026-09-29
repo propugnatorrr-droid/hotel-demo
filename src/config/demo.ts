@@ -1,5 +1,5 @@
 // Must match the emails in src/db/seed/data.ts
-export const DEMO_ROLES = ['owner', 'manager', 'receptionist', 'housekeeping', 'pos'] as const;
+export const DEMO_ROLES = ['owner', 'manager', 'receptionist', 'housekeeping', 'pos', 'spa', 'accountant'] as const;
 export type DemoRole = (typeof DEMO_ROLES)[number];
 
 export const DEMO_ACCOUNTS: Record<DemoRole, string> = {
@@ -8,4 +8,6 @@ export const DEMO_ACCOUNTS: Record<DemoRole, string> = {
   receptionist: 'reception@vala-demo.test',
   housekeeping: 'housekeeping@vala-demo.test',
   pos: 'bar@vala-demo.test',
+  spa: 'spa@vala-demo.test',
+  accountant: 'finance@vala-demo.test',
 };

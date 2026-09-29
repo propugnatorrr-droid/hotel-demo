@@ -1,17 +1,18 @@
 'use client';
 
-import { LogOut } from 'lucide-react';
+import { LogOut, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { DropdownMenu } from 'radix-ui';
 import { useTransition } from 'react';
 import { Avatar } from '@/components/ui/avatar';
 import { dropdownContent, dropdownItem, dropdownSeparator } from '@/components/ui/dropdown';
 import type { Role } from '@/lib/auth/types';
+import { Link } from '@/i18n/navigation';
 import { signOut } from '@/server/actions/auth';
 
-type UserMenuProps = { name: string; email: string; role: Role; avatarUrl?: string | null };
+type UserMenuProps = { name: string; email: string; role: Role; avatarUrl?: string | null; superAdmin?: boolean };
 
-export function UserMenu({ name, email, role, avatarUrl }: UserMenuProps) {
+export function UserMenu({ name, email, role, avatarUrl, superAdmin }: UserMenuProps) {
   const t = useTranslations('shell');
   const tRoles = useTranslations('roles');
   const [pending, start] = useTransition();
@@ -35,6 +36,11 @@ export function UserMenu({ name, email, role, avatarUrl }: UserMenuProps) {
             <p className="truncate text-xs text-subtle">{email}</p>
           </div>
           <DropdownMenu.Separator className={dropdownSeparator} />
+          {superAdmin && (
+            <DropdownMenu.Item asChild className={dropdownItem}>
+              <Link href="/admin"><ShieldCheck />Super admin</Link>
+            </DropdownMenu.Item>
+          )}
           <DropdownMenu.Item className={dropdownItem} onSelect={() => start(() => signOut())}>
             <LogOut />
             {t('signOut')}
