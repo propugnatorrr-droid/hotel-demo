@@ -538,3 +538,219 @@ async function applyRevision(tx: Tx, orgId: string, rev: ChannelRevision, source
       else if (b.status === 'checked_in') {
         warnings.push('cancelInHouse');
         bookingIds.push(b.id);
+      }
+    }
+    return { bookingIds, warnings };
+  }
+
+  // new / modified
+  const roomsIn = rev.rooms.length
+    ? rev.rooms
+    : [{ externalRoomTypeId: null, checkIn: rev.arrival, checkOut: rev.departure, amount: rev.amount, adults: 2, children: 0 }];
+  const multi = roomsIn.length > 1;
+  const guestId = await upsertGuest(tx, orgId, rev);
+  const currency = (['ALL', 'EUR', 'USD'] as const).find((c) => c === rev.currency) ?? org.currency;
+  if (currency !== rev.currency) warnings.push('currency');
+  const prepaid = rev.paymentCollect === 'ota';
+  const seen = new Set<string>();
+
+  for (let i = 0; i < roomsIn.length; i++) {
+    const r = roomsIn[i]!;
+    const ref = multi ? `${code}-${i + 1}` : code;
+    seen.add(ref);
+
+    const roomTypeId = await resolveRoomType(tx, orgId, r.externalRoomTypeId);
+    if (!roomTypeId) throw new IngestError('unmapped');
+    if (diffDays(r.checkOut, r.checkIn) < 1) throw new IngestError('dates');
+    await lockInventory(tx, orgId, roomTypeId);
+
+    const amount = round2(r.amount || (multi ? 0 : rev.amount));
+    const commission = multi ? round2(rev.commission * (amount / (rev.amount || 1))) : rev.commission;
+    const common = {
+      guestId, roomTypeId, checkIn: r.checkIn, checkOut: r.checkOut, adults: r.adults, children: r.children,
+      totalAmount: amount, commissionAmount: commission, currency, eta: rev.arrivalHour, specialRequests: rev.notes,
+    };
+    const prev = byRef.get(ref) ?? (multi ? undefined : byRef.get(code));
+
+    if (prev && prev.status !== 'cancelled' && prev.status !== 'no_show') {
+      if (prev.status === 'checked_in' || prev.status === 'checked_out') {
+        warnings.push('modifyInHouse');
+        bookingIds.push(prev.id);
+        continue;
+      }
+      const moved = prev.roomTypeId !== roomTypeId || prev.checkIn !== r.checkIn || prev.checkOut !== r.checkOut;
+      await tx
+        .update(bookings)
+        .set({ ...common, ...(moved ? { roomId: null } : {}), ...(prepaid ? { paidAmount: Math.max(prev.paidAmount, amount) } : {}) })
+        .where(and(eq(bookings.orgId, orgId), eq(bookings.id, prev.id)));
+      if (moved) {
+        if (await isOverbooked(tx, orgId, roomTypeId, r.checkIn, r.checkOut, prev.id)) {
+          warnings.push('overbooked');
+          await overbookingAlert(tx, orgId, { id: prev.id, roomTypeId, checkIn: r.checkIn, checkOut: r.checkOut }, guestLabel, label);
+        } else {
+          await assignFreeRoom(tx, orgId, prev.id, roomTypeId, r.checkIn, r.checkOut);
+        }
+      }
+      await tx.insert(auditLogs).values({
+        orgId, action: 'booking.channel_modified', entityType: 'booking', entityId: prev.id,
+        meta: { channel: source, revisionId: rev.id, from: { checkIn: prev.checkIn, checkOut: prev.checkOut }, to: { checkIn: r.checkIn, checkOut: r.checkOut } },
+      });
+      bookingIds.push(prev.id);
+      continue;
+    }
+
+    const over = await isOverbooked(tx, orgId, roomTypeId, r.checkIn, r.checkOut);
+    const [created] = await tx
+      .insert(bookings)
+      .values({
+        orgId, code: bookingCode(), ...common, status: 'confirmed', source, channelRef: ref,
+        paidAmount: prepaid ? amount : 0,
+      })
+      .returning({ id: bookings.id });
+    const id = created!.id;
+    if (prepaid && amount > 0) {
+      await tx.insert(payments).values({ orgId, bookingId: id, amount, method: 'online', receivedAt: now });
+    }
+    if (over) {
+      warnings.push('overbooked');
+      await overbookingAlert(tx, orgId, { id, roomTypeId, checkIn: r.checkIn, checkOut: r.checkOut }, guestLabel, label);
+    } else {
+      await assignFreeRoom(tx, orgId, id, roomTypeId, r.checkIn, r.checkOut);
+    }
+    await tx.insert(auditLogs).values({
+      orgId, action: 'booking.channel_created', entityType: 'booking', entityId: id,
+      meta: { channel: source, revisionId: rev.id, otaCode: rev.otaCode, amount, commission },
+    });
+    bookingIds.push(id);
+  }
+
+  // A modification that dropped rooms: cancel the leftovers.
+  if (rev.status === 'modified') {
+    for (const b of existing) {
+      if (!seen.has(b.channelRef ?? '') && (b.status === 'tentative' || b.status === 'confirmed')) await cancel(b);
+    }
+  }
+  return { bookingIds, warnings };
+}
+
+async function safeAck(adapter: ChannelAdapter, id: string) {
+  try {
+    await adapter.ack(id);
+  } catch (e) {
+    console.error('[channels] ack', e);
+  }
+}
+
+export async function ingestRevisions(orgId: string, revs: ChannelRevision[], adapter: ChannelAdapter) {
+  let applied = 0;
+  let failed = 0;
+  const ids: string[] = [];
+
+  for (const rev of revs) {
+    const [done] = await db
+      .select({ status: channelEvents.status })
+      .from(channelEvents)
+      .where(and(eq(channelEvents.orgId, orgId), eq(channelEvents.provider, 'channex'), eq(channelEvents.externalId, rev.id)))
+      .limit(1);
+    if (done && done.status !== 'error') {
+      await safeAck(adapter, rev.id); // already stored, Channex resent it
+      continue;
+    }
+
+    const source = sourceFromOta(rev.otaName);
+    const summary = {
+      channel: source, guest: `${rev.customer.firstName} ${rev.customer.lastName}`.trim(), otaCode: rev.otaCode,
+      checkIn: rev.arrival, checkOut: rev.departure, amount: rev.amount, currency: rev.currency,
+    };
+    try {
+      const r = await db.transaction((tx) => applyRevision(tx, orgId, rev, source));
+      ids.push(...r.bookingIds);
+      await logEvent({
+        orgId, direction: 'pull', kind: `booking_${rev.status}`, status: r.warnings.length ? 'warning' : 'ok',
+        externalId: rev.id, bookingId: r.bookingIds[0] ?? null, summary: { ...summary, warnings: r.warnings },
+      });
+      await safeAck(adapter, rev.id); // ack only after the booking is safely stored
+      applied++;
+    } catch (e) {
+      const code = e instanceof IngestError ? e.message : (pgCode(e) ?? 'unknown');
+      if (!(e instanceof IngestError)) console.error('[channels] ingest', e);
+      await logEvent({ orgId, direction: 'pull', kind: `booking_${rev.status}`, status: 'error', error: code, externalId: rev.id, summary });
+      failed++;
+    }
+  }
+  if (applied > 0) await pushAri(orgId, { availability: true });
+  return { applied, failed, bookingIds: ids };
+}
+
+/** One feed call for all properties (Channex best practice), dispatched to the right hotel. */
+export async function pullChannex() {
+  const key = process.env.CHANNEX_API_KEY;
+  if (!key) return { applied: 0, failed: 0 };
+  const adapter = channexAdapter(key);
+  let applied = 0;
+  let failed = 0;
+  const seenIds = new Set<string>();
+
+  for (let page = 0; page < 10; page++) {
+    const feed = (await adapter.fetchFeed()).filter((r) => !seenIds.has(r.id));
+    if (feed.length === 0) break;
+    feed.forEach((r) => seenIds.add(r.id));
+
+    const pids = [...new Set(feed.map((r) => r.propertyId))];
+    const rows = await db
+      .select({ orgId: integrations.orgId, externalAccountId: integrations.externalAccountId, mode: integrations.mode, isEnabled: integrations.isEnabled })
+      .from(integrations)
+      .where(and(eq(integrations.provider, 'channex'), inArray(integrations.externalAccountId, pids)));
+    const orgByPid = new Map(
+      rows.filter((i) => resolveChannelMode(i).effective === 'channex').map((i) => [i.externalAccountId!, i.orgId]),
+    );
+
+    const byOrg = new Map<string, ChannelRevision[]>();
+    for (const r of feed) {
+      const orgId = orgByPid.get(r.propertyId);
+      if (!orgId) continue; // unknown property: leave unacked so Channex warns
+      byOrg.set(orgId, [...(byOrg.get(orgId) ?? []), r]);
+    }
+    for (const [orgId, revs] of byOrg) {
+      const res = await ingestRevisions(orgId, revs, adapter);
+      applied += res.applied;
+      failed += res.failed;
+    }
+  }
+  return { applied, failed };
+}
+
+/* ───────────────────────── Demo: simulate an OTA booking ───────────────────────── */
+
+export async function simulateOtaBooking(orgId: string, channel: 'booking_com' | 'airbnb' | 'expedia') {
+  const [org] = await db
+    .select({ currency: organizations.currency, timezone: organizations.timezone })
+    .from(organizations)
+    .where(eq(organizations.id, orgId))
+    .limit(1);
+  if (!org) throw new IngestError('notFound');
+  const types = await db
+    .select({ id: roomTypes.id, maxOccupancy: roomTypes.maxOccupancy })
+    .from(roomTypes)
+    .where(and(eq(roomTypes.orgId, orgId), eq(roomTypes.isActive, true)));
+  if (types.length === 0) throw new IngestError('type');
+
+  const today = todayIn(org.timezone);
+  const rand = (n: number) => Math.floor(Math.random() * n);
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const t = types[rand(types.length)]!;
+    const checkIn = addDays(today, 2 + rand(40));
+    const checkOut = addDays(checkIn, 2 + rand(4));
+    const q = await quoteStay(db, { orgId, roomTypeId: t.id, checkIn, checkOut, enforceRules: false });
+    if (!q.ok) continue;
+    const { buildMockRevision } = await import('@/server/integrations/channel/mock');
+    const rev = buildMockRevision({
+      channel, externalRoomTypeId: t.id, checkIn, checkOut,
+      amount: round2(q.total * (0.95 + Math.random() * 0.1)), maxOccupancy: t.maxOccupancy, currency: org.currency,
+    });
+    const res = await ingestRevisions(orgId, [rev], mockAdapter);
+    if (res.failed) throw new IngestError('unknown');
+    return res.bookingIds[0] ?? null;
+  }
+  throw new IngestError('soldOut');
+}
