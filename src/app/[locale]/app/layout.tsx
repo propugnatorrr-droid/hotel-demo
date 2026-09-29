@@ -28,7 +28,7 @@ export default async function AppLayout({ children, params }: Props) {
       <div className="flex min-w-0 flex-1 flex-col">
         {ctx.org.isDemo && <DemoBanner />}
         <Topbar ctx={ctx} navKeys={navKeys} />
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-10">{children}</main>
+        <main className="page-enter flex-1 px-5 py-8 md:px-14 md:py-16">{children}</main>
       </div>
       <CommandBar navKeys={commandKeys} aiMode={aiMode} locale={locale} currency={ctx.org.currency} />
     </div>

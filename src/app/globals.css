@@ -4,9 +4,9 @@
 
 /* ─── Raw palette: Adriatic Quiet Luxury ─────────────────────────── */
 @theme static {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
 
   --color-ionian-50: #f1f6fa;
   --color-ionian-100: #e0ebf4;
@@ -201,6 +201,7 @@
   }
 
   html {
+    font-size: 16.5px;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -214,7 +215,8 @@
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-feature-settings: 'ss01', 'cv11';
+    line-height: 1.65;
+    letter-spacing: 0.003em;
   }
 
   ::selection {
@@ -242,9 +244,16 @@
 /* ─── Utilities ──────────────────────────────────────────────────── */
 @utility font-display {
   font-family: var(--font-serif);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 0.95;
+  font-weight: 350;
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 60;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+}
+
+@utility font-serif-num {
+  font-family: var(--font-serif);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 @utility tabular {
@@ -343,3 +352,52 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-booking-land { animation: none; }
 }
+
+/* ─── Roomier rhythm: every spacing utility scales by 12% ─────────── */
+:root {
+  --spacing: 0.28rem;
+}
+
+h1, h2, h3 { line-height: 1.08; }
+h2 + p, h1 + p { margin-top: 1.1em; }
+p { line-height: 1.7; }
+
+/* ─── Motion system ──────────────────────────────────────────────── */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(1.5deg); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes gradient-pan {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@utility animate-float { animation: float-slow 9s ease-in-out infinite; }
+@utility animate-marquee { animation: marquee 38s linear infinite; }
+@utility text-shimmer {
+  background: linear-gradient(90deg, var(--color-gold-400), #fff3c9, var(--color-gold-500), var(--color-gold-400));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 6s linear infinite;
+}
+
+/* Route entrance: page root children rise in one after another. */
+.page-enter > * > * {
+  animation: fade-up 700ms var(--ease-out-expo) both;
+}
+.page-enter > * > *:nth-child(1) { animation-delay: 0ms; }
+.page-enter > * > *:nth-child(2) { animation-delay: 70ms; }
+.page-enter > * > *:nth-child(3) { animation-delay: 140ms; }
+.page-enter > * > *:nth-child(4) { animation-delay: 210ms; }
+.page-enter > * > *:nth-child(5) { animation-delay: 280ms; }
+.page-enter > * > *:nth-child(6) { animation-delay: 350ms; }
+.page-enter > * > *:nth-child(n + 7) { animation-delay: 420ms; }
+
+/* Interactive surfaces feel alive by default. */
+button, [role='button'], a { transition-property: color, background-color, border-color, box-shadow, transform, opacity; transition-duration: 200ms; transition-timing-function: var(--ease-out-expo); }

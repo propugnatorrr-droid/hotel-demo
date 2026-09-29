@@ -151,7 +151,7 @@ export function ResortSite(props: Props) {
           <h2 className="font-display mt-4 text-5xl md:text-7xl">{t.roomsTitle}</h2>
           <p className="mt-4 text-lg text-limestone-700">{t.roomsSub}</p>
         </motion.div>
-        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {roomsRef.map((r, i) => (
             <motion.article key={r.id} {...reveal} transition={{ ...reveal.transition, delay: (i % 3) * 0.08 }} className="group overflow-hidden rounded-3xl border border-limestone-200 bg-white shadow-soft transition-shadow hover:shadow-lift">
               <div className="relative aspect-[4/3] overflow-hidden">
@@ -186,7 +186,7 @@ export function ResortSite(props: Props) {
             <h2 className="font-display mt-4 text-5xl md:text-7xl">{t.experiencesTitle}</h2>
             <p className="mt-4 text-lg text-ionian-200">{t.experiencesSub}</p>
           </motion.div>
-          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {content.outlets.map((o, i) => {
               const Icon = o.type === 'restaurant' ? Coffee : o.type === 'spa' ? Flower2 : o.type === 'pool_bar' ? Waves : Wine;
               return (
@@ -226,7 +226,7 @@ export function ResortSite(props: Props) {
       )}
 
       {/* contact */}
-      <section id="contact" className="bg-limestone-100 py-24 md:py-32">
+      <section id="contact" className="bg-limestone-100 py-32 md:py-48">
         <div className="mx-auto grid max-w-7xl gap-14 px-5 md:grid-cols-2 md:px-10">
           <motion.div {...reveal}>
             <p className="text-xs tracking-[0.3em] text-accent uppercase">{t.nav.contact}</p>
