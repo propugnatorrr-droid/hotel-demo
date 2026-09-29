@@ -41,7 +41,10 @@ function pgCode(e: unknown) {
 async function run<T>(fn: () => Promise<T>, mutate = true): Promise<ActionResult<T>> {
   try {
     const data = await fn();
-    if (mutate) revalidatePath('/[locale]/app', 'layout');
+    if (mutate) {
+      revalidatePath('/[locale]/app', 'layout');
+      await queueChannelPush();
+    }
     return { ok: true, data };
   } catch (error) {
     unstable_rethrow(error); // keep login redirects working
