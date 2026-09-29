@@ -11,6 +11,7 @@ type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export type Exec = typeof db | Tx;
 
 export type QuoteFailure = 'nights' | 'type' | 'closed' | 'minStay' | 'soldOut' | 'occupancy';
+export type QuoteWarning = 'closed' | 'minStay';
 export type Quote =
   | {
       ok: true;
@@ -19,6 +20,7 @@ export type Quote =
       total: number;
       available: number;
       maxOccupancy: number;
+      warnings: QuoteWarning[];
     }
   | { ok: false; reason: QuoteFailure; date?: string; minStay?: number };
 
@@ -38,9 +40,13 @@ export async function quoteStay(
     checkOut: string;
     guests?: number;
     excludeBookingId?: string;
+    /** false = staff override: closed dates / min stay become warnings */
+    enforceRules?: boolean;
   },
 ): Promise<Quote> {
   const { orgId, roomTypeId, checkIn, checkOut } = input;
+  const enforce = input.enforceRules ?? true;
+  const warnings: QuoteWarning[] = [];
   const nights = diffDays(checkOut, checkIn);
   if (nights < 1 || nights > 60) return { ok: false, reason: 'nights' };
 
@@ -66,13 +72,19 @@ export async function quoteStay(
   const byDate = new Map(rates.map((r) => [r.date, r]));
 
   const minStay = byDate.get(checkIn)?.minStay ?? 1;
-  if (nights < minStay) return { ok: false, reason: 'minStay', minStay };
+  if (nights < minStay) {
+    if (enforce) return { ok: false, reason: 'minStay', minStay };
+    warnings.push('minStay');
+  }
 
   const nightly: { date: string; price: number }[] = [];
   for (let i = 0; i < nights; i++) {
     const date = addDays(checkIn, i);
     const rate = byDate.get(date);
-    if (rate?.closed) return { ok: false, reason: 'closed', date };
+    if (rate?.closed) {
+      if (enforce) return { ok: false, reason: 'closed', date };
+      if (!warnings.includes('closed')) warnings.push('closed');
+    }
     nightly.push({ date, price: rate?.price ?? type.basePrice });
   }
 
@@ -119,58 +131,13 @@ export async function quoteStay(
     total: round2(nightly.reduce((sum, n) => sum + n.price, 0)),
     available,
     maxOccupancy: type.maxOccupancy,
+    warnings,
   };
 }
 
-function clashSql(orgId: string, checkIn: string, checkOut: string, excludeBookingId?: string) {
-  return sql`exists (
-    select 1 from bookings b
-    where b.org_id = ${orgId}
-      and b.room_id = ${rooms.id}
-      and b.status in ('tentative','confirmed','checked_in')
-      and b.check_in < ${checkOut}
-      and b.check_out > ${checkIn}
-      ${excludeBookingId ? sql`and b.id <> ${excludeBookingId}` : sql``}
-  )`;
-}
-
-/** Free rooms of a type, best first: inspected → clean → dirty. */
-export async function findFreeRooms(
+/** Price of a stay from daily_rates with base-price fallback. Ignores availability and rules. */
+export async function priceNights(
   exec: Exec,
-  input: { orgId: string; roomTypeId: string; checkIn: string; checkOut: string; excludeBookingId?: string },
+  input: { orgId: string; roomTypeId: string; checkIn: string; checkOut: string },
 ) {
-  return exec
-    .select({ id: rooms.id, number: rooms.number, status: rooms.status })
-    .from(rooms)
-    .where(
-      and(
-        eq(rooms.orgId, input.orgId),
-        eq(rooms.roomTypeId, input.roomTypeId),
-        eq(rooms.isActive, true),
-        ne(rooms.status, 'out_of_order'),
-        sql`not ${clashSql(input.orgId, input.checkIn, input.checkOut, input.excludeBookingId)}`,
-      ),
-    )
-    .orderBy(sql`case ${rooms.status} when 'inspected' then 0 when 'clean' then 1 else 2 end`, asc(rooms.number));
-}
-
-export async function roomIsFree(
-  exec: Exec,
-  input: { orgId: string; roomId: string; checkIn: string; checkOut: string; excludeBookingId?: string },
-) {
-  const [clash] = await exec
-    .select({ id: bookings.id })
-    .from(bookings)
-    .where(
-      and(
-        eq(bookings.orgId, input.orgId),
-        eq(bookings.roomId, input.roomId),
-        inArray(bookings.status, [...HOLDING_STATUSES]),
-        lt(bookings.checkIn, input.checkOut),
-        gt(bookings.checkOut, input.checkIn),
-        input.excludeBookingId ? ne(bookings.id, input.excludeBookingId) : undefined,
-      ),
-    )
-    .limit(1);
-  return !clash;
-}
+  const nights = diffD
