@@ -151,7 +151,7 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
   const [busy, setBusy] = useState(false);
   const [auto, setAuto] = useState(false);
   const [listening, setListening] = useState(false);
-  const end = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   const nextId = useRef(1);
   const started = useRef(false);
 
@@ -163,7 +163,7 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
     }
   }, []);
   const scroll = useCallback(() => {
-    end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    box.current?.scrollTo({ top: box.current.scrollHeight });
   }, []);
   useEffect(() => {
     scroll();
@@ -268,17 +268,17 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto flex h-[calc(100dvh-15rem)] min-h-[30rem] max-w-3xl flex-col">
       {turns.length === 0 ? (
-        <PageHero eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} />
+        <PageHero className="shrink-0 !py-10 md:!py-12" eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} />
       ) : (
-        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 border-b border-border pb-5">
+        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 items-center gap-3 border-b border-border pb-4">
           <span className="ai-glow grid size-10 place-items-center rounded-full"><Sparkles className="size-4 text-accent" /></span>
           <div><p className="text-[11px] tracking-[0.25em] text-accent uppercase">{t.eyebrow}</p><p className="font-display text-2xl">{t.title}</p></div>
         </motion.header>
       )}
 
-      <div className="mt-8 space-y-10 pb-44">
+      <div ref={box} className="mt-4 min-h-0 flex-1 space-y-8 overflow-y-auto py-4 pr-2">
         {turns.length === 0 && (
           <div className="flex flex-wrap gap-3">
             {t.suggestions.map((s, i) => (
@@ -305,11 +305,10 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
             </motion.div>
           ),
         )}
-        <div ref={end} />
       </div>
 
-      <div className="sticky bottom-0 z-20 -mx-5 mt-4 bg-gradient-to-t from-background from-70% to-transparent px-5 pt-10 pb-5 md:-mx-14 md:px-14">
-        <form onSubmit={(e) => { e.preventDefault(); void ask(text); }} className="ai-glow flex items-end gap-2 rounded-3xl p-2 pl-5 shadow-float">
+      <div className="shrink-0 border-t border-border bg-background pt-4">
+        <form onSubmit={(e) => { e.preventDefault(); void ask(text); }} className="ai-glow flex items-end gap-2 rounded-3xl p-2 pl-5">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(text); } }} rows={1} maxLength={1500} placeholder={listening ? t.listening : t.placeholder} className="max-h-40 min-h-12 flex-1 resize-none bg-transparent py-3 text-base outline-none" />
           <button type="button" onClick={listen} title={t.mic} className={cn('grid size-11 shrink-0 place-items-center rounded-full border border-border-strong hover:bg-surface-2', listening && 'animate-pulse border-danger text-danger')}><Mic className="size-4" /></button>
           <button type="submit" disabled={busy || !text.trim()} className="grid size-11 shrink-0 place-items-center rounded-full bg-ionian-900 text-limestone-50 transition-transform hover:-translate-y-0.5 disabled:opacity-40">{busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}</button>
