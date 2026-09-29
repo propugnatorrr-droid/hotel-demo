@@ -178,6 +178,7 @@ export async function POST(request: Request) {
             parallel_tool_calls: false,
             max_tokens: 550,
             temperature: 0.2,
+            reasoning: { enabled: false },
           }),
         });
       } finally {

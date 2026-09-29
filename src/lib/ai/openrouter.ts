@@ -58,6 +58,8 @@ export async function chatOnce(opts: ChatOptions) {
         messages: opts.messages,
         max_tokens: opts.maxTokens ?? 700,
         temperature: opts.temperature ?? 0.3,
+        // Reasoning models (DeepSeek V4.1) otherwise spend the whole token budget thinking and return empty content.
+        reasoning: { enabled: false },
         ...(opts.tools?.length
           ? {
               tools: opts.tools.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
