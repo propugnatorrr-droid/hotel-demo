@@ -16,6 +16,8 @@ export async function setIntegration(input: unknown): Promise<ActionResult> {
     const ctx = await gate(MANAGERS);
     const p = z.object({ provider: z.enum(providers), mode: z.enum(['mock', 'sandbox', 'live']), enabled: z.boolean() }).parse(input);
     if (p.mode !== 'mock' && !envReady(p.provider)) fail('envMissing');
+    // Real-time OTA sync costs us per hotel: only Signature/Enterprise or hotels with the paid add-on.
+    if (p.provider === 'channex' && p.mode !== 'mock' && !ctx.org.isDemo && !['premium', 'enterprise'].includes(ctx.org.plan) && ctx.org.settings.realtimeSyncAddon !== true) fail('planRequired');
     if (p.mode === 'live' && ctx.org.isDemo) fail('demoLive');
     await db
       .insert(integrations)

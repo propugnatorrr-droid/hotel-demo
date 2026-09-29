@@ -12,7 +12,7 @@ import { ALL_MODULES, MODULE_LABELS, planPrice, sizeForRooms, type PlanKey } fro
 import type { ModuleKey } from '@/lib/auth/types';
 import { relativeTime } from '@/lib/dates';
 import { cn } from '@/lib/utils';
-import { createHotel, enterHotel, recordHotelPayment, setHotelPlan, setHotelStatus, toggleHotelModule } from '@/server/actions/admin';
+import { createHotel, enterHotel, setHotelFlag, recordHotelPayment, setHotelPlan, setHotelStatus, toggleHotelModule } from '@/server/actions/admin';
 import type { AdminHotel } from '@/server/queries/admin';
 
 const select = 'h-10 w-full rounded-md border border-border-strong bg-surface px-3 text-sm';
@@ -72,11 +72,26 @@ function HotelPanel({ hotel, onDone, onEnter }: { hotel: AdminHotel; locale: str
         <p className="text-xs text-muted">/r/{hotel.slug}</p>
         <Button className="mt-3 w-full" variant="secondary" disabled={act.pending} onClick={() => act.run(() => enterHotel(hotel.id), onEnter)}><LogIn /> Hyr në panel <ArrowRight /></Button>
       </div>
+      {hotel.channexGate.realtimeHotels < hotel.channexGate.needed && <p className="rounded-md bg-gold-100 px-3 py-2 text-xs text-limestone-800">Channex: {hotel.channexGate.realtimeHotels}/{hotel.channexGate.needed} hotele me real-time. Aktivizo platformën vetëm kur arrihet pragu.</p>}
       <div className="grid grid-cols-2 gap-3">
         <div><Label>Plani {(() => { const sz = sizeForRooms(hotel.rooms); const pr = sz === 'enterprise' ? null : planPrice(hotel.plan as PlanKey, sz); return pr ? `· ${pr} €/muaj (${sz})` : ''; })()}</Label>
           <select className={select} value={hotel.plan} disabled={act.pending} onChange={(e) => act.run(() => setHotelPlan({ orgId: hotel.id, plan: e.target.value, applyModules: true }), onDone)}>{PLANS.map((p) => <option key={p}>{p}</option>)}</select></div>
         <div><Label>Statusi</Label>
           <select className={select} value={hotel.status} disabled={act.pending} onChange={(e) => act.run(() => setHotelStatus({ orgId: hotel.id, status: e.target.value }), onDone)}>{['demo', 'trial', 'active', 'suspended'].map((s) => <option key={s}>{s}</option>)}</select></div>
+      </div>
+      {hotel.economics && (
+        <div className={cn('rounded-xl border p-3 text-sm', hotel.economics.pct < 40 ? 'border-danger/40 bg-danger-soft' : 'border-border bg-surface-2')}>
+          <p className="text-xs tracking-wider text-muted uppercase">Marzhi (30 ditë, vlerësim)</p>
+          <p className="mt-1 font-serif text-3xl tabular-nums">{hotel.economics.pct}% <span className="font-sans text-sm text-muted">· {hotel.economics.margin} € fitim</span></p>
+          <p className="mt-1 text-xs text-muted">Të ardhura {hotel.economics.revenue} € (plan {hotel.economics.price} € + tepricë {hotel.economics.overage} €) · kosto {hotel.economics.cost} €</p>
+          <p className="mt-1 text-xs text-subtle">AI {hotel.usage.ai30} kërkesa · WhatsApp {hotel.usage.whatsapp30} · zë {hotel.usage.voiceMin30} min{hotel.usage.realtime ? ' · real-time ON' : ''}</p>
+          {hotel.economics.overage > 0 && <p className="mt-1 text-xs font-medium text-accent">Faturo tepricën: {hotel.economics.overage} €</p>}
+          {hotel.economics.pct < 40 && <p className="mt-1 text-xs font-medium text-danger">Marzh i ulët: rrit planin ose faturo tepricën.</p>}
+        </div>
+      )}
+      <div className="space-y-1 text-sm">
+        <label className="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 hover:bg-surface-2"><span>Shtesa: sinkronizim real-time (OTA)</span><input type="checkbox" checked={hotel.flags.realtimeSyncAddon} disabled={act.pending} onChange={(e) => act.run(() => setHotelFlag({ orgId: hotel.id, flag: 'realtimeSyncAddon', value: e.target.checked }), onDone)} /></label>
+        <label className="flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 hover:bg-surface-2"><span>Çmim themelues (−30%)</span><input type="checkbox" checked={hotel.flags.founding} disabled={act.pending} onChange={(e) => act.run(() => setHotelFlag({ orgId: hotel.id, flag: 'founding', value: e.target.checked }), onDone)} /></label>
       </div>
       <div>
         <p className="mb-2 text-xs tracking-wider text-muted uppercase">Modulet</p>

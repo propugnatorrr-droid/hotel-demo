@@ -49,7 +49,7 @@ const sq = {
   logAction: { 'channel.sync': 'Sinkronizim', 'channel.sync_failed': 'Sinkronizim i dështuar', 'channel.push': 'Dërgim disponueshmërie', 'channel.mapping_saved': 'Lidhje e ruajtur' } as Record<string, string>,
   errors: {
     invalid: 'Kontrollo fushat.', forbidden: 'Kjo kërkon leje menaxheri.', module: 'Moduli është i çaktivizuar.', unknown: 'Diçka shkoi keq.',
-    envMissing: 'Shto çelësat në variablat e mjedisit fillimisht.', demoLive: 'Demo nuk lejohet të kalojë në live.',
+    envMissing: 'Shto çelësat në variablat e mjedisit fillimisht.', planRequired: 'Sinkronizimi në kohë reale është i përfshirë në Signature ose si shtesë. Na shkruaj për ta aktivizuar.', demoLive: 'Demo nuk lejohet të kalojë në live.',
     badUrl: 'Lidhja duhet të jetë https publike.', noFeed: 'Kjo lidhje nuk ka URL iCal.', syncFailed: 'Sinkronizimi dështoi. Kontrollo lidhjen.',
     notMapped: 'Plotëso ID-të e Channex dhe ID-në e pronës fillimisht.', pushFailed: 'Dërgimi te Channex dështoi.', type: 'Lloji i dhomës nuk u gjet.',
   } as Record<string, string>,
@@ -103,7 +103,7 @@ const en: typeof sq = {
   logAction: { 'channel.sync': 'Sync', 'channel.sync_failed': 'Sync failed', 'channel.push': 'Availability push', 'channel.mapping_saved': 'Mapping saved' },
   errors: {
     invalid: 'Check the fields.', forbidden: 'This needs manager permission.', module: 'This module is disabled.', unknown: 'Something went wrong.',
-    envMissing: 'Add the keys to the environment variables first.', demoLive: 'The demo cannot go live.',
+    envMissing: 'Add the keys to the environment variables first.', planRequired: 'Real-time sync is included in Signature or as a paid add-on. Contact us to enable it.', demoLive: 'The demo cannot go live.',
     badUrl: 'The link must be a public https URL.', noFeed: 'This mapping has no iCal URL.', syncFailed: 'Sync failed. Check the link.',
     notMapped: 'Fill in the Channex IDs and property ID first.', pushFailed: 'Push to Channex failed.', type: 'Room type not found.',
   },

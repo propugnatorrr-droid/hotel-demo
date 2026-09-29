@@ -8,7 +8,7 @@ export const ALL_MODULES: ModuleKey[] = ['pms', 'calendar', 'channel_manager', '
 export const PLAN_MODULES: Record<PlanKey, ModuleKey[]> = {
   basic: ['pms', 'calendar', 'booking_engine', 'invoicing', 'reports'],
   pro: ['pms', 'calendar', 'booking_engine', 'invoicing', 'reports', 'inbox', 'ai_chat', 'pos', 'spa', 'expenses', 'fiscalization'],
-  premium: ['pms', 'calendar', 'booking_engine', 'invoicing', 'reports', 'inbox', 'ai_chat', 'pos', 'spa', 'expenses', 'fiscalization', 'owner_ai', 'channel_manager'],
+  premium: ['pms', 'calendar', 'booking_engine', 'invoicing', 'reports', 'inbox', 'ai_chat', 'pos', 'spa', 'expenses', 'fiscalization', 'owner_ai', 'channel_manager', 'voice_agent'],
   enterprise: ALL_MODULES,
 };
 
@@ -16,49 +16,84 @@ export const PLAN_MODULES: Record<PlanKey, ModuleKey[]> = {
 export type SizeKey = 'small' | 'medium' | 'large';
 export const SIZE_TIERS: Record<SizeKey, { maxRooms: number }> = { small: { maxRooms: 15 }, medium: { maxRooms: 40 }, large: { maxRooms: 100 } };
 export const sizeForRooms = (rooms: number): SizeKey | 'enterprise' => (rooms <= 15 ? 'small' : rooms <= 40 ? 'medium' : rooms <= 100 ? 'large' : 'enterprise');
+export type PaidPlan = 'basic' | 'pro' | 'premium';
+export const PLAN_NAMES: Record<PlanKey, string> = { basic: 'Essential', pro: 'Professional', premium: 'Signature', enterprise: 'Enterprise' };
 
-/** List price, EUR per month, billed monthly. Annual billing = 2 months free. Founding offer: 30% off for the first 50 hotels, locked 2 years. */
-export const PLAN_PRICE_EUR: Record<Exclude<PlanKey, 'enterprise'>, Record<SizeKey, number>> = {
-  basic: { small: 19, medium: 39, large: 79 },
-  pro: { small: 49, medium: 99, large: 179 },
-  premium: { small: 89, medium: 169, large: 299 },
+/**
+ * PRICING RULES that keep every hotel profitable (see PLAN §3.2):
+ *  1. Base price by size and plan (EUR/month, monthly billing; annual prepay = 2 months free).
+ *  2. Real-time OTA sync (Channex, $7 per hotel + $130 platform) is INCLUDED only in Signature, an add-on elsewhere.
+ *     We only activate the Channex platform once at least CHANNEX_MIN_HOTELS hotels pay for real-time sync.
+ *  3. One-time setup fee per size (data import, channel mapping, training) paid up front.
+ *  4. Metered extras (WhatsApp, voice minutes, AI conversations) are included up to a quota, then billed cost-plus.
+ *  5. Founding offer (first 50 hotels, 2 years) never goes below FOUNDING_MIN_MARGIN.
+ */
+export const PLAN_PRICE_EUR: Record<PaidPlan, Record<SizeKey, number>> = {
+  basic: { small: 29, medium: 59, large: 119 },
+  pro: { small: 79, medium: 149, large: 269 },
+  premium: { small: 149, medium: 279, large: 499 },
 };
+export const SETUP_FEE_EUR: Record<SizeKey, number> = { small: 149, medium: 299, large: 499 };
 export const FOUNDING_DISCOUNT = 0.3;
 export const FOUNDING_HOTELS = 50;
+export const FOUNDING_MIN_MARGIN = 0.5;
+export const ANNUAL_MONTHS_FREE = 2;
+export const CHANNEX_MIN_HOTELS = 2;
 
-/** Paid add-ons. Real-time OTA sync is priced above its Channex cost ($7/hotel/month). */
 export const ADDONS = {
-  realtimeSync: { small: 12, medium: 15, large: 19 } as Record<SizeKey, number>,
-  voice: { monthly: 39, includedMinutes: 150, extraPerMinute: 0.3 },
-  /** Template messages (pre-arrival, welcome, review) are the biggest variable cost, so the included quota scales with size. */
-  whatsapp: { includedMessages: { small: 200, medium: 600, large: 1500 } as Record<SizeKey, number>, passThroughMarkup: 0.25 },
+  /** Real-time sync on Basic/Pro (Signature includes it). Cost to us about EUR 6.5. */
+  realtimeSync: { small: 29, medium: 39, large: 49 } as Record<SizeKey, number>,
+  voice: { monthly: 49, includedMinutes: 150, extraPerMinute: 0.35 },
+  voiceIncludedInSignature: 100,
+  /** Template messages are the biggest variable cost, so quotas scale with size. Email is the free default. */
+  whatsapp: { includedMessages: { small: 200, medium: 600, large: 1500 } as Record<SizeKey, number>, overagePerMessage: 0.04 },
+  /** Guest AI conversations per month included in Professional; Signature gets 3x. Overage is nearly pure margin. */
+  aiConversations: { included: { small: 300, medium: 800, large: 2000 } as Record<SizeKey, number>, signatureMultiplier: 3, overagePerConversation: 0.05 },
 };
 export const ENTERPRISE = { oneTimeMin: 5000, oneTimeMax: 20000, monthlyFrom: 249 };
 
-/**
- * Worst-case monthly cost to serve one hotel, EUR. Assumptions (review quarterly with real bills):
- *  - AI on DeepSeek V4 Flash via OpenRouter at the worst listed price ($0.10 in / $1.25 out per 1M tokens);
- *    guest chat + owner AI + drafts + OCR: ~EUR 2.5 / 5 / 10 per month by size on Pro (x1.3 on Premium: owner AI + reports).
- *  - WhatsApp template messages ~EUR 0.028 each, whole included quota consumed (email is the free default).
- *  - Infra share (Vercel + Supabase) EUR 2 / 3 / 5.
- */
-export function costEstimate(plan: Exclude<PlanKey, 'enterprise'>, size: SizeKey) {
-  const infra = { small: 2, medium: 3, large: 5 }[size];
+/** Unit costs (EUR). DeepSeek V4 Flash via OpenRouter at the worst listed price ~ EUR 0.004 per guest conversation. */
+export const UNIT_COST = { whatsappMessage: 0.028, voiceMinute: 0.15, aiRequest: 0.004, channexPerHotel: 6.5, infra: { small: 2, medium: 3, large: 5 } as Record<SizeKey, number> };
+export const REALTIME_SYNC_COST_EUR = UNIT_COST.channexPerHotel;
+export const FIXED_COSTS_EUR_MONTH = 45; // Vercel Pro + Supabase Pro. Channex platform fee ($130) is added once real-time hotels >= CHANNEX_MIN_HOTELS.
+export const CHANNEX_PLATFORM_FEE_EUR = 120;
+
+/** Worst-case monthly cost to serve one hotel with every included quota fully used. */
+export function costEstimate(plan: PaidPlan, size: SizeKey) {
+  const infra = UNIT_COST.infra[size];
   if (plan === 'basic') return infra;
-  const ai = { small: 2.5, medium: 5, large: 10 }[size] * (plan === 'premium' ? 1.3 : 1);
-  const whatsapp = ADDONS.whatsapp.includedMessages[size] * 0.028;
-  return Math.round((infra + ai + whatsapp) * 10) / 10;
+  const conv = ADDONS.aiConversations.included[size] * (plan === 'premium' ? ADDONS.aiConversations.signatureMultiplier : 1);
+  const ai = conv * 1.5 * UNIT_COST.aiRequest + (plan === 'premium' ? 3 : 0.5); // ~1.5 requests per conversation + owner AI / reports
+  const whatsapp = ADDONS.whatsapp.includedMessages[size] * UNIT_COST.whatsappMessage;
+  const signature = plan === 'premium' ? UNIT_COST.channexPerHotel + ADDONS.voiceIncludedInSignature * UNIT_COST.voiceMinute : 0;
+  return Math.round((infra + ai + whatsapp + signature) * 10) / 10;
 }
-export const REALTIME_SYNC_COST_EUR = 6.5;
-export const VOICE_COST_PER_MIN_EUR = 0.15; // Vapi + Azure speech + LLM
-export const FIXED_COSTS_EUR_MONTH = 160; // Vercel Pro + Supabase Pro + Channex platform fee
 
 export const planPrice = (plan: PlanKey, size: SizeKey) => (plan === 'enterprise' ? null : PLAN_PRICE_EUR[plan][size]);
 export const foundingPrice = (list: number) => Math.round(list * (1 - FOUNDING_DISCOUNT));
-export function grossMargin(plan: Exclude<PlanKey, 'enterprise'>, size: SizeKey, founding = true) {
+export function grossMargin(plan: PaidPlan, size: SizeKey, founding = true) {
   const price = founding ? foundingPrice(PLAN_PRICE_EUR[plan][size]) : PLAN_PRICE_EUR[plan][size];
   const cost = costEstimate(plan, size);
   return { price, cost, margin: Math.round((price - cost) * 10) / 10, pct: Math.round(((price - cost) / price) * 100) };
+}
+
+/** Actual usage vs plan: estimated cost, overage to bill, and margin. Used by the super-admin margin monitor. */
+export function usageEconomics(input: { plan: PlanKey; size: SizeKey | 'enterprise'; founding: boolean; aiRequests: number; whatsappMessages: number; voiceMinutes: number; realtimeSync: boolean }) {
+  if (input.plan === 'enterprise' || input.size === 'enterprise') return null;
+  const { plan, size } = input;
+  const list = PLAN_PRICE_EUR[plan][size];
+  const price = input.founding ? foundingPrice(list) : list;
+  const convIncluded = ADDONS.aiConversations.included[size] * (plan === 'premium' ? ADDONS.aiConversations.signatureMultiplier : 1);
+  const conversations = input.aiRequests / 1.5;
+  const waIncluded = plan === 'basic' ? 0 : ADDONS.whatsapp.includedMessages[size];
+  const voiceIncluded = plan === 'premium' ? ADDONS.voiceIncludedInSignature : 0;
+  const overage =
+    Math.max(0, conversations - (plan === 'basic' ? 0 : convIncluded)) * ADDONS.aiConversations.overagePerConversation +
+    Math.max(0, input.whatsappMessages - waIncluded) * ADDONS.whatsapp.overagePerMessage +
+    Math.max(0, input.voiceMinutes - voiceIncluded) * ADDONS.voice.extraPerMinute;
+  const cost = UNIT_COST.infra[size] + input.aiRequests * UNIT_COST.aiRequest + input.whatsappMessages * UNIT_COST.whatsappMessage + input.voiceMinutes * UNIT_COST.voiceMinute + (input.realtimeSync ? UNIT_COST.channexPerHotel : 0);
+  const revenue = price + overage + (input.realtimeSync && plan !== 'premium' ? ADDONS.realtimeSync[size] : 0);
+  return { price, overage: Math.round(overage * 100) / 100, cost: Math.round(cost * 100) / 100, revenue: Math.round(revenue * 100) / 100, margin: Math.round((revenue - cost) * 100) / 100, pct: Math.round(((revenue - cost) / revenue) * 100) };
 }
 
 export const MODULE_LABELS: Record<ModuleKey, { sq: string; en: string }> = {

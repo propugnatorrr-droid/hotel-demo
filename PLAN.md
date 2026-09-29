@@ -52,29 +52,34 @@ Owners in Albania have money but aren't very tech-savvy, so **simplicity is a fe
    - Custom features for them live behind module flags, so the core never forks.
 
 ### 3.2 Pricing (decided 2026-09-29, single source of truth: `src/config/plans.ts`)
-Price depends on **hotel size** (rooms) and **plan**. EUR per month, billed monthly. Annual = 2 months free.
+Positioning: the premium hotel **operating system**, not a cheap PMS. Public prices, EUR per month by hotel size. Annual prepay = 2 months free. One-time setup fee.
 
 | Plan | 1-15 rooms | 16-40 rooms | 41-100 rooms |
 |---|---|---|---|
-| Basic | 19 | 39 | 79 |
-| Pro | 49 | 99 | 179 |
-| Premium | 89 | 169 | 299 |
-| Enterprise (100+ rooms, groups) | EUR 5,000-20,000 one-time + from EUR 249/month, own server and brand | | |
+| **Essential** (Basic) | 29 | 59 | 119 |
+| **Professional** (Pro) | 79 | 149 | 269 |
+| **Signature** (Premium) | 149 | 279 | 499 |
+| **Enterprise** (100+ rooms, groups) | EUR 5,000-20,000 one-time + from EUR 249/month, own server and brand | | |
+| One-time setup | 149 | 299 | 499 |
 
-- **Founding offer:** -30% for the first 50 hotels, locked 2 years (about EUR 34/month for a small Pro, in line with Gerti's $400-500/year idea). List price returns in year 3.
-- **Add-ons:** real-time OTA sync EUR 12 / 15 / 19 by size (Channex costs about EUR 6.5); AI voice EUR 39/month incl. 150 min, then EUR 0.30/min (cost about EUR 0.15/min); WhatsApp template messages included from Pro (200 / 600 / 1,500 by size), then cost + 25%. Email is the free default channel. Free iCal sync stays in every plan.
-- **Hotels pay their fiscalization provider directly** (their own certificate).
-- **AI model:** DeepSeek V4 Flash via OpenRouter (guest chat, owner AI, drafts, reports, voice LLM); vision OCR uses a separate vision model. Listed prices vary by version/provider ($0.01-0.10 in, $0.20-1.25 out per 1M tokens); costs below use the worst case. AI is only about EUR 2.5-13 per hotel per month, so WhatsApp templates and voice are the real variable costs.
-- **Worst-case margin at founding price** (all included WhatsApp used; `costEstimate()` in plans.ts):
+**Rules that keep every hotel profitable**
+1. **Real-time OTA sync (Channex) is included only in Signature**; on Essential/Professional it is a paid add-on (EUR 29 / 39 / 49). Free iCal sync is in every plan.
+2. **Channex platform ($130/month) is switched on only when at least 2 hotels pay for real-time sync.** Until then everyone runs on iCal and the Channex sandbox. Enforced in code: `setIntegration` refuses live Channex unless the plan is Signature/Enterprise or the add-on flag is set by a super admin.
+3. **Setup fee up front** (data import, channel mapping, training) covers onboarding cost and filters non-serious leads.
+4. **Metered extras** with included quotas by size, then cost-plus: WhatsApp templates 200/600/1,500 then EUR 0.04 each (email is the free default; enforced in the guest journey); guest AI conversations 300/800/2,000 (Signature x3) then EUR 0.05 each; voice EUR 49/month incl. 150 min (Signature: 100 min included) then EUR 0.35/min.
+5. **Founding offer:** -30% for the first 50 hotels, locked 2 years, never below a 50% gross margin (`FOUNDING_MIN_MARGIN`).
+6. **Margin monitor:** the super-admin console shows each hotel's 30-day usage, estimated cost, overage to bill and margin, and flags hotels below 40%.
+
+**Worst-case gross margin at founding price** (every included quota fully used; `grossMargin()` in plans.ts)
 
 | Plan | small | medium | large |
 |---|---|---|---|
-| Basic | 85% | 89% | 91% |
-| Pro | 70% | 64% | 54% |
-| Premium | 82% | 78% | 71% |
+| Essential | 90% | 93% | 94% |
+| Professional | 82% | 76% | 68% |
+| Signature | 64% | 70% | 69% |
 
-- **Break-even:** fixed costs about EUR 160/month (Vercel Pro + Supabase Pro + Channex platform fee) = about 7 small Pro hotels at founding price, about 4 at list price.
-- Payment from clients: cash at first, automated card billing later. Cost estimates are assumptions; review quarterly with real OpenRouter/WhatsApp bills.
+**Cost assumptions** (review quarterly with real bills): AI = DeepSeek V4 Flash via OpenRouter at the worst listed price (about EUR 0.004 per guest conversation); WhatsApp template EUR 0.028; voice EUR 0.15/min (Vapi + Azure speech + LLM); Channex EUR 6.5 per hotel; infra EUR 2/3/5 per hotel. Fixed: Vercel Pro + Supabase Pro about EUR 45/month, plus Channex platform about EUR 120 once real-time hotels >= 2. **Break-even: about 2 hotels** before Channex, 3-4 after.
+Hotels pay their fiscalization provider directly. Payment cash at first, card billing later.
 
 ### 3.3 Cost reality check (per hotel, if we pay for everything)
 - Channex: $130/month platform fee + $7/hotel/month (only hotels with an active channel). Per hotel per year: ≈ $396 at 5 hotels, $162 at 20, $115 at 50, $100 at 100.

@@ -139,3 +139,15 @@ export async function enterHotel(orgId: string): Promise<ActionResult> {
     return null;
   });
 }
+
+/** Paid add-ons the founders switch on for a hotel (real-time OTA sync) and the founding-price flag. */
+export async function setHotelFlag(input: unknown): Promise<ActionResult> {
+  return adminRun(async (admin) => {
+    const p = z.object({ orgId: z.uuid(), flag: z.enum(['realtimeSyncAddon', 'founding']), value: z.boolean() }).parse(input);
+    const [org] = await db.select().from(organizations).where(eq(organizations.id, p.orgId)).limit(1);
+    if (!org) fail('notFound');
+    await db.update(organizations).set({ settings: { ...org.settings, [p.flag]: p.value } }).where(eq(organizations.id, org.id));
+    await db.insert(auditLogs).values({ orgId: org.id, userId: admin.id, action: 'admin.flag_changed', entityType: 'organization', entityId: org.id, meta: { [p.flag]: p.value } });
+    return null;
+  });
+}
