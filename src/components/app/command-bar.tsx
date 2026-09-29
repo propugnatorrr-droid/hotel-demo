@@ -64,15 +64,17 @@ export function CommandBar({ navKeys, aiMode, locale, currency }: { navKeys: str
     const nav: Row[] = NAV.filter((i) => navKeys.includes(i.key))
       .map((i) => ({ kind: 'nav' as const, id: i.key, label: tNav(i.key), href: i.href, Icon: i.icon }))
       .filter((r) => !q || normalize(r.label).includes(q) || r.id.includes(q));
-    return q ? [{ kind: 'ask', id: 'ask', label: query.trim() }, ...nav] : nav;
-  }, [query, navKeys, tNav]);
+    return q && aiMode ? [{ kind: 'ask', id: 'ask', label: query.trim() }, ...nav] : nav;
+  }, [query, navKeys, tNav, aiMode]);
 
   useEffect(() => setActive(0), [query]);
 
   const select = useCallback(
     (row: Row) => {
       if (row.kind === 'ask') {
-        setAsked(row.label);
+        // The agent page answers AND acts, with live thinking steps.
+        onOpenChange(false);
+        router.push(`/app/assistant?q=${encodeURIComponent(row.label.slice(0, 600))}`);
         return;
       }
       onOpenChange(false);
@@ -192,7 +194,7 @@ export function CommandBar({ navKeys, aiMode, locale, currency }: { navKeys: str
                   );
                 })}
 
-                {query && navRows.length === 0 && (
+                {query && navRows.length === 0 && !askRow && (
                   <p className="px-3 py-4 text-sm text-subtle">{t('empty')}</p>
                 )}
               </>
