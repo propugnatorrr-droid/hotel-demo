@@ -130,9 +130,7 @@ export async function runActions(opts: { db: never; ctx: never; org: { id: strin
     const run = async (message: string, autoRun: boolean) => {
       const res = await POST(new Request('http://x/api/ai/agent', { method: 'POST', body: JSON.stringify({ message, autoRun, locale: 'sq', history: [] }) }));
       const text = await res.text();
-      return text.split('
-
-').filter((l) => l.startsWith('data: ')).map((l) => JSON.parse(l.slice(6)) as { type: string; [k: string]: unknown });
+      return text.split(String.fromCharCode(10, 10)).filter((l) => l.startsWith('data: ')).map((l) => JSON.parse(l.slice(6)) as { type: string; [k: string]: unknown });
     };
     const a = await check('LLM agent (review mode) proposes instead of writing', () => run(`Rezervo një dhomë ${code} për 2 persona nga ${addDays(today, 170)} deri ${addDays(today, 172)} për Ana Testuese, tel +355691000111`, false), (ev) => (ev.some((e) => e.type === 'proposal' && e.tool === 'create_booking') ? null : JSON.stringify(ev.map((e) => e.type + ':' + (e.tool ?? e.name ?? ''))) + ' ' + JSON.stringify(ev.find((e) => e.type === 'answer' || e.type === 'error'))));
     console.log('    events:', a?.map((e) => e.type + (e.tool ? `(${e.tool})` : e.name ? `(${e.name})` : '')).join(' → '));
