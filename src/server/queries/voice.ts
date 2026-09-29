@@ -29,8 +29,8 @@ export async function getVoice(ctx: OrgContext, locale: 'sq' | 'en') {
       transcriber: { provider: 'azure', language: sq ? 'sq-AL' : 'en-US' },
       voice: { provider: 'azure', voiceId: sq ? 'sq-AL-AnilaNeural' : 'en-GB-SoniaNeural' },
       model: {
-        provider: 'openai',
-        model: 'gpt-4o',
+        provider: 'openrouter',
+        model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4-flash',
         messages: [{
           role: 'system',
           content: [

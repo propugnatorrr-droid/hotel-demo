@@ -1,7 +1,8 @@
 import 'server-only';
-import { and, eq, inArray, lt, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, like, lt, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { auditLogs, bookings, conversations, guests, messageTemplates, messages, organizations } from '@/db/schema';
+import { auditLogs, bookings, rooms, conversations, guests, messageTemplates, messages, organizations } from '@/db/schema';
+import { ADDONS, sizeForRooms } from '@/config/plans';
 import { addDays, formatDay, todayIn } from '@/lib/dates';
 import { escapeHtml, sendEmail } from '@/lib/integrations/email';
 import { sendChannelMessage } from '@/lib/integrations/messaging';
@@ -26,6 +27,17 @@ export async function runJourney(org: Org) {
   const wa = await getIntegration(org.id, 'meta_whatsapp');
   const reviewLink = typeof org.settings.reviewLink === 'string' ? org.settings.reviewLink : '';
   let sent = 0;
+
+  // WhatsApp template messages cost us money: enforce the plan's monthly quota, then fall back to free email.
+  const [roomCount] = await db.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(rooms).where(and(eq(rooms.orgId, org.id), eq(rooms.isActive, true)));
+  const size = sizeForRooms(roomCount?.n ?? 0);
+  const quota = size === 'enterprise' ? Infinity : ADDONS.whatsapp.includedMessages[size];
+  const monthStart = new Date(`${today.slice(0, 7)}-01T00:00:00Z`);
+  const [used] = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(auditLogs)
+    .where(and(eq(auditLogs.orgId, org.id), like(auditLogs.action, 'journey.%'), sql`${auditLogs.meta}->>'via' = 'whatsapp'`, gte(auditLogs.createdAt, monthStart)));
+  let waUsed = used?.n ?? 0;
 
   for (const rule of RULES) {
     const tpl = tpls.find((t) => t.key === rule.key);
@@ -53,7 +65,7 @@ export async function runJourney(org: Org) {
         review_link: reviewLink,
       });
 
-      const viaWhatsapp = Boolean(g.phone) && wa.mode !== 'mock' && wa.enabled;
+      const viaWhatsapp = Boolean(g.phone) && wa.mode !== 'mock' && wa.enabled && waUsed < quota;
       let ok = false;
       if (viaWhatsapp) {
         const to = g.phone!.replace(/[^\d]/g, '');
@@ -73,6 +85,7 @@ export async function runJourney(org: Org) {
       }
       if (ok) {
         sent++;
+        if (viaWhatsapp) waUsed++;
         await db.insert(auditLogs).values({ orgId: org.id, action: `journey.${rule.key}`, entityType: 'booking', entityId: b.id, meta: { via: viaWhatsapp ? 'whatsapp' : 'email' } });
       }
     }

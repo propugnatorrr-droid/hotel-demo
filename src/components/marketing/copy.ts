@@ -63,8 +63,8 @@ const sq = {
     addonsTitle: 'Shtesa kur t’i duhen',
     addons: [
       { name: 'Sinkronizim në kohë reale me OTA', text: 'Çmime e disponueshmëri te Booking.com, Airbnb, Expedia menjëherë (iCal falas mbetet në çdo plan).', price: '' },
-      { name: 'Asistenti zanor me AI', text: '150 minuta përfshirë, pastaj 0,25 € / minutë.', price: '39 € / muaj' },
-      { name: 'WhatsApp', text: '300 mesazhe përfshirë në Profesional e sipër, pastaj me koston + 25%.', price: 'Përfshirë' },
+      { name: 'Asistenti zanor me AI', text: '150 minuta përfshirë, pastaj 0,30 € / minutë.', price: '39 € / muaj' },
+      { name: 'WhatsApp', text: 'Mesazhe përfshirë në Profesional e sipër (200 / 600 / 1.500 sipas madhësisë), pastaj me koston + 25%. Email është falas.', price: 'Përfshirë' },
     ],
     plans: [
       { key: 'basic', name: 'Bazë', text: 'Për guesthouse dhe hotele të vogla.', features: ['Recepsioni dhe rezervimet', 'Kalendari', 'Faqja e rezervimeve pa komision', 'Faturimi', 'Raportet'] },
@@ -164,8 +164,8 @@ const en: typeof sq = {
     addonsTitle: 'Add-ons when you need them',
     addons: [
       { name: 'Real-time OTA sync', text: 'Prices and availability on Booking.com, Airbnb, Expedia instantly (free iCal stays in every plan).', price: '' },
-      { name: 'AI voice assistant', text: '150 minutes included, then €0.25 / minute.', price: '€39 / month' },
-      { name: 'WhatsApp', text: '300 messages included from Professional up, then at cost + 25%.', price: 'Included' },
+      { name: 'AI voice assistant', text: '150 minutes included, then €0.30 / minute.', price: '€39 / month' },
+      { name: 'WhatsApp', text: 'Messages included from Professional up (200 / 600 / 1,500 by size), then at cost + 25%. Email is free.', price: 'Included' },
     ],
     plans: [
       { key: 'basic', name: 'Basic', text: 'For guesthouses and small hotels.', features: ['Front desk and bookings', 'Calendar', 'Commission-free booking website', 'Invoicing', 'Reports'] },

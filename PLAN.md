@@ -62,9 +62,17 @@ Price depends on **hotel size** (rooms) and **plan**. EUR per month, billed mont
 | Enterprise (100+ rooms, groups) | EUR 5,000-20,000 one-time + from EUR 249/month, own server and brand | | |
 
 - **Founding offer:** -30% for the first 50 hotels, locked 2 years (about EUR 34/month for a small Pro, in line with Gerti's $400-500/year idea). List price returns in year 3.
-- **Add-ons:** real-time OTA sync EUR 12 / 15 / 19 by size (Channex costs us about EUR 6.5); AI voice EUR 39/month incl. 150 min, then EUR 0.25/min (cost about EUR 0.12/min); WhatsApp 300 messages included from Pro, then cost + 25%. Free iCal sync stays in every plan.
+- **Add-ons:** real-time OTA sync EUR 12 / 15 / 19 by size (Channex costs about EUR 6.5); AI voice EUR 39/month incl. 150 min, then EUR 0.30/min (cost about EUR 0.15/min); WhatsApp template messages included from Pro (200 / 600 / 1,500 by size), then cost + 25%. Email is the free default channel. Free iCal sync stays in every plan.
 - **Hotels pay their fiscalization provider directly** (their own certificate).
-- **Margin check (founding price, est. cost per hotel: Basic 2, Pro 11, Premium 18 EUR):** Basic small 85%, Pro small 68%, Premium small 71%; larger sizes are higher. Real-time sync add-on 46-66%.
+- **AI model:** DeepSeek V4 Flash via OpenRouter (guest chat, owner AI, drafts, reports, voice LLM); vision OCR uses a separate vision model. Listed prices vary by version/provider ($0.01-0.10 in, $0.20-1.25 out per 1M tokens); costs below use the worst case. AI is only about EUR 2.5-13 per hotel per month, so WhatsApp templates and voice are the real variable costs.
+- **Worst-case margin at founding price** (all included WhatsApp used; `costEstimate()` in plans.ts):
+
+| Plan | small | medium | large |
+|---|---|---|---|
+| Basic | 85% | 89% | 91% |
+| Pro | 70% | 64% | 54% |
+| Premium | 82% | 78% | 71% |
+
 - **Break-even:** fixed costs about EUR 160/month (Vercel Pro + Supabase Pro + Channex platform fee) = about 7 small Pro hotels at founding price, about 4 at list price.
 - Payment from clients: cash at first, automated card billing later. Cost estimates are assumptions; review quarterly with real OpenRouter/WhatsApp bills.
 

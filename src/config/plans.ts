@@ -29,21 +29,36 @@ export const FOUNDING_HOTELS = 50;
 /** Paid add-ons. Real-time OTA sync is priced above its Channex cost ($7/hotel/month). */
 export const ADDONS = {
   realtimeSync: { small: 12, medium: 15, large: 19 } as Record<SizeKey, number>,
-  voice: { monthly: 39, includedMinutes: 150, extraPerMinute: 0.25 },
-  whatsapp: { includedMessages: 300, passThroughMarkup: 0.25 },
+  voice: { monthly: 39, includedMinutes: 150, extraPerMinute: 0.3 },
+  /** Template messages (pre-arrival, welcome, review) are the biggest variable cost, so the included quota scales with size. */
+  whatsapp: { includedMessages: { small: 200, medium: 600, large: 1500 } as Record<SizeKey, number>, passThroughMarkup: 0.25 },
 };
 export const ENTERPRISE = { oneTimeMin: 5000, oneTimeMax: 20000, monthlyFrom: 249 };
 
-/** Estimated cost to serve one hotel per month, EUR (infra share, AI, messaging). Used for margin checks; review quarterly. */
-export const COST_ESTIMATE_EUR: Record<Exclude<PlanKey, 'enterprise'>, number> = { basic: 2, pro: 11, premium: 18 };
+/**
+ * Worst-case monthly cost to serve one hotel, EUR. Assumptions (review quarterly with real bills):
+ *  - AI on DeepSeek V4 Flash via OpenRouter at the worst listed price ($0.10 in / $1.25 out per 1M tokens);
+ *    guest chat + owner AI + drafts + OCR: ~EUR 2.5 / 5 / 10 per month by size on Pro (x1.3 on Premium: owner AI + reports).
+ *  - WhatsApp template messages ~EUR 0.028 each, whole included quota consumed (email is the free default).
+ *  - Infra share (Vercel + Supabase) EUR 2 / 3 / 5.
+ */
+export function costEstimate(plan: Exclude<PlanKey, 'enterprise'>, size: SizeKey) {
+  const infra = { small: 2, medium: 3, large: 5 }[size];
+  if (plan === 'basic') return infra;
+  const ai = { small: 2.5, medium: 5, large: 10 }[size] * (plan === 'premium' ? 1.3 : 1);
+  const whatsapp = ADDONS.whatsapp.includedMessages[size] * 0.028;
+  return Math.round((infra + ai + whatsapp) * 10) / 10;
+}
 export const REALTIME_SYNC_COST_EUR = 6.5;
+export const VOICE_COST_PER_MIN_EUR = 0.15; // Vapi + Azure speech + LLM
 export const FIXED_COSTS_EUR_MONTH = 160; // Vercel Pro + Supabase Pro + Channex platform fee
 
 export const planPrice = (plan: PlanKey, size: SizeKey) => (plan === 'enterprise' ? null : PLAN_PRICE_EUR[plan][size]);
 export const foundingPrice = (list: number) => Math.round(list * (1 - FOUNDING_DISCOUNT));
 export function grossMargin(plan: Exclude<PlanKey, 'enterprise'>, size: SizeKey, founding = true) {
   const price = founding ? foundingPrice(PLAN_PRICE_EUR[plan][size]) : PLAN_PRICE_EUR[plan][size];
-  return { price, cost: COST_ESTIMATE_EUR[plan], margin: price - COST_ESTIMATE_EUR[plan], pct: Math.round(((price - COST_ESTIMATE_EUR[plan]) / price) * 100) };
+  const cost = costEstimate(plan, size);
+  return { price, cost, margin: Math.round((price - cost) * 10) / 10, pct: Math.round(((price - cost) / price) * 100) };
 }
 
 export const MODULE_LABELS: Record<ModuleKey, { sq: string; en: string }> = {
