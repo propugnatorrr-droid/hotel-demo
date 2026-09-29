@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { auditLogs } from '@/db/schema';
 import { requireOrg } from '@/lib/auth/session';
+import { listBookings } from '@/server/queries/bookings';
 import { getOperations } from '@/server/queries/operations';
 
 export const runtime = 'nodejs';
@@ -60,6 +61,33 @@ const tools = [
       },
     },
   },
+    {
+    type: 'function',
+    function: {
+      name: 'find_booking',
+      description: 'Search bookings by guest name, booking code, email or phone. Read-only.',
+      parameters: {
+        type: 'object',
+        properties: { query: { type: 'string' } },
+        required: ['query'],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_movements',
+      description: "Today's arrivals, in-house guests or departures. Read-only.",
+      parameters: {
+        type: 'object',
+        properties: { view: { type: 'string', enum: ['arrivals', 'inhouse', 'departures'] } },
+        required: ['view'],
+        additionalProperties: false,
+      },
+    },
+  },
+
 ] as const;
 
 export async function POST(request: Request) {
@@ -204,6 +232,29 @@ export async function POST(request: Request) {
                 openTasks: room.openTasks,
               }
             : { error: 'Room not found' };
+        }
+        if (call.function.name === 'find_booking' || call.function.name === 'list_movements') {
+          const front = ['owner', 'manager', 'receptionist'].includes(ctx.role) || ctx.profile.isSuperAdmin;
+          const q = call.function.name === 'find_booking' ? z.string().max(80).safeParse(args.query) : null;
+          const v = z.enum(['arrivals', 'inhouse', 'departures']).safeParse(args.view);
+
+          const rows =
+            call.function.name === 'find_booking'
+              ? q?.success && q.data.trim().length >= 2 ? await listBookings(ctx, 'all', q.data) : []
+              : v.success ? await listBookings(ctx, v.data, '') : [];
+
+          result = {
+            count: rows.length,
+            bookings: rows.slice(0, 15).map((r) => ({
+              code: front ? r.code : undefined,
+              guest: front ? `${r.firstName} ${r.lastName}` : undefined,
+              room: r.roomNumber ?? 'unassigned',
+              status: r.status,
+              checkIn: r.checkIn,
+              checkOut: r.checkOut,
+              balance: front ? r.balance : undefined,
+            })),
+          };
         }
 
         if (call.function.name === 'list_work') {
