@@ -5,8 +5,10 @@ import { useTranslations } from 'next-intl';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Kbd } from '@/components/ui/kbd';
+import { AskPanel } from '@/components/app/ask-panel';
 import { NAV } from '@/config/navigation';
 import { useRouter } from '@/i18n/navigation';
+import type { Currency } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const EVENT = 'iliria:command';
@@ -23,7 +25,7 @@ type Row =
   | { kind: 'ask'; id: 'ask'; label: string }
   | { kind: 'nav'; id: string; label: string; href: string; Icon: LucideIcon };
 
-export function CommandBar({ navKeys }: { navKeys: string[] }) {
+export function CommandBar({ navKeys, aiMode, locale, currency }: { navKeys: string[]; aiMode: 'owner' | 'staff' | null; locale: string; currency: Currency }) {
   const t = useTranslations('command');
   const tNav = useTranslations('nav.items');
   const router = useRouter();
@@ -125,14 +127,14 @@ export function CommandBar({ navKeys }: { navKeys: string[] }) {
 
           <div className="max-h-[52vh] overflow-y-auto p-2">
             {asked ? (
-              <div className="ai-glow animate-fade-up m-1 rounded-lg p-5">
-                <p className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-accent uppercase">
-                  <Sparkles className="size-3.5" />
-                  {t('ask')}
-                </p>
-                <p className="font-display mt-3 text-3xl leading-tight">“{asked}”</p>
-                <p className="mt-3 text-sm text-muted">{t('aiSoon')}</p>
-              </div>
+              aiMode ? (
+                <div className="m-1"><AskPanel question={asked} mode={aiMode} locale={locale} currency={currency} /></div>
+              ) : (
+                <div className="ai-glow animate-fade-up m-1 rounded-lg p-5">
+                  <p className="font-display text-3xl leading-tight">“{asked}”</p>
+                  <p className="mt-3 text-sm text-muted">{t('aiSoon')}</p>
+                </div>
+              )
             ) : (
               <>
                 {!query && (

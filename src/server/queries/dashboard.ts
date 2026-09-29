@@ -140,6 +140,7 @@ export async function getDashboard(ctx: OrgContext) {
           severity: alerts.severity,
           title: alerts.title,
           body: alerts.body,
+          data: alerts.data,
           createdAt: alerts.createdAt,
         })
         .from(alerts)
@@ -216,7 +217,7 @@ export async function getDashboard(ctx: OrgContext) {
     departures,
     inHouse: inHouseRows[0]?.n ?? 0,
     housekeeping,
-    alerts: openAlerts,
+    alerts: openAlerts.map((a) => ({ ...a, hasApply: Boolean(a.data && typeof a.data === 'object' && 'roomTypeId' in (a.data as object)) })),
     needsHuman: inboxRows[0]?.n ?? 0,
     channels,
     yesterday: {

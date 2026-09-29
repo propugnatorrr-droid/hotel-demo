@@ -43,7 +43,7 @@ export const NAV: NavItem[] = [
   { key: 'rooms', href: '/app/rooms', icon: BedDouble, group: 'operations', module: 'pms', roles: [...FRONT, 'housekeeping'], simple: false, batch: 5 },
   { key: 'housekeeping', href: '/app/housekeeping', icon: SprayCan, group: 'operations', module: 'pms', roles: [...FRONT, 'housekeeping'], simple: false, batch: 5 },
   { key: 'guests', href: '/app/guests', icon: Users, group: 'operations', module: 'pms', roles: FRONT, simple: false, batch: 6 },
-  { key: 'assistant', href: '/app/assistant', icon: Sparkles, group: 'communication', module: 'pms', roles: [...FRONT, 'housekeeping'], simple: true, batch: 5 },
+  { key: 'assistant', href: '/app/assistant', icon: Sparkles, group: 'communication', module: 'pms', roles: [...FRONT, 'housekeeping', 'accountant'], simple: true, batch: 5 },
   { key: 'inbox', href: '/app/inbox', icon: Inbox, group: 'communication', module: 'inbox', roles: FRONT, simple: true, batch: 11 },
   { key: 'pos', href: '/app/pos', icon: Wine, group: 'sales', module: 'pos', roles: ['owner', 'manager', 'pos'], simple: false, batch: 12 },
   { key: 'spa', href: '/app/spa', icon: Flower2, group: 'sales', module: 'spa', roles: ['owner', 'manager', 'receptionist', 'spa'], simple: false, batch: 12 },

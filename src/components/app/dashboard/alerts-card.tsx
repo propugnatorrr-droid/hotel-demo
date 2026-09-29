@@ -1,5 +1,6 @@
 import { ArrowRight, Info, MessageCircle, ShieldAlert, TriangleAlert } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { AlertActions } from '@/components/app/dashboard/alert-actions';
 import { Card } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
 import { relativeTime } from '@/lib/dates';
@@ -16,11 +17,12 @@ type Props = {
   alerts: DashboardData['alerts'];
   needsHuman: number;
   canInbox: boolean;
+  canResolve?: boolean;
   locale: string;
   className?: string;
 };
 
-export async function AlertsCard({ alerts, needsHuman, canInbox, locale, className }: Props) {
+export async function AlertsCard({ alerts, needsHuman, canInbox, canResolve, locale, className }: Props) {
   const t = await getTranslations('dashboard.alerts');
   const now = new Date();
 
@@ -58,6 +60,7 @@ export async function AlertsCard({ alerts, needsHuman, canInbox, locale, classNa
                   <p className="mt-1 text-[11px] text-subtle">
                     {t(`severity.${a.severity}`)} · {relativeTime(a.createdAt, locale, now)}
                   </p>
+                  {canResolve && <AlertActions id={a.id} type={a.type} canApply={a.hasApply} locale={locale} />}
                 </div>
               </li>
             );

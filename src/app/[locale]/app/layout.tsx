@@ -19,6 +19,9 @@ export default async function AppLayout({ children, params }: Props) {
   const navKeys = sidebarNavKeys(ctx.role, ctx.modules, ctx.profile.simpleMode);
   const commandKeys = accessibleNavKeys(ctx.role, ctx.modules);
 
+  const money = ['owner', 'manager', 'accountant'].includes(ctx.role) || ctx.profile.isSuperAdmin;
+  const aiMode: 'owner' | 'staff' | null = money && ctx.modules.has('owner_ai') ? 'owner' : ctx.modules.has('pms') && ['receptionist', 'housekeeping', 'owner', 'manager'].includes(ctx.role) ? 'staff' : null;
+
   return (
     <div className="flex min-h-dvh">
       <Sidebar navKeys={navKeys} orgs={ctx.orgs} activeOrgId={ctx.org.id} simpleMode={ctx.profile.simpleMode} />
@@ -27,7 +30,7 @@ export default async function AppLayout({ children, params }: Props) {
         <Topbar ctx={ctx} navKeys={navKeys} />
         <main className="flex-1 px-4 py-6 md:px-8 md:py-10">{children}</main>
       </div>
-      <CommandBar navKeys={commandKeys} />
+      <CommandBar navKeys={commandKeys} aiMode={aiMode} locale={locale} currency={ctx.org.currency} />
     </div>
   );
 }

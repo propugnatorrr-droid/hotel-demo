@@ -12,12 +12,13 @@ type Props = {
   locale: string;
   currency: Currency;
   showMoney: boolean;
+  story?: { headline: string; story: string } | null;
   canInbox: boolean;
   canCalendar: boolean;
   className?: string;
 };
 
-export async function MorningBriefing({ data, locale, currency, showMoney, canInbox, canCalendar, className }: Props) {
+export async function MorningBriefing({ data, locale, currency, showMoney, story, canInbox, canCalendar, className }: Props) {
   const t = await getTranslations('dashboard.briefing');
   const b = (chunks: React.ReactNode) => <span className="text-ionian-500 dark:text-gold-400">{chunks}</span>;
 
@@ -75,7 +76,7 @@ export async function MorningBriefing({ data, locale, currency, showMoney, canIn
         </p>
 
         <p className="mt-5 max-w-4xl font-serif text-2xl leading-[1.3] tracking-[-0.01em] text-foreground md:text-[2.1rem]">
-          {parts.map((p, i) => (
+          {story ? story.story : parts.map((p, i) => (
             <span key={i}>
               {p}
               {i < parts.length - 1 ? ' ' : ''}

@@ -15,6 +15,9 @@ import { requireOrg } from '@/lib/auth/session';
 import { capitalize, formatDay, hourIn } from '@/lib/dates';
 import { formatCurrency, formatPercent } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { and, eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { ownerReports } from '@/db/schema';
 import { getDashboard } from '@/server/queries/dashboard';
 
 type Props = { params: Promise<{ locale: string }> };
@@ -34,6 +37,9 @@ export default async function TodayPage({ params }: Props) {
 
   const currency = ctx.org.currency;
   const showMoney = MONEY_ROLES.includes(ctx.role) || ctx.profile.isSuperAdmin;
+  const [report] = showMoney
+    ? await db.select({ content: ownerReports.content }).from(ownerReports).where(and(eq(ownerReports.orgId, ctx.org.id), eq(ownerReports.reportDate, data.today), eq(ownerReports.kind, 'morning'))).limit(1)
+    : [];
   const simple = ctx.profile.simpleMode;
   const can = (key: string) => {
     const item = NAV.find((i) => i.key === key);
@@ -72,6 +78,7 @@ export default async function TodayPage({ params }: Props) {
         locale={locale}
         currency={currency}
         showMoney={showMoney}
+        story={report?.content ?? null}
         canInbox={can('inbox')}
         canCalendar={can('calendar')}
         className="mt-8"
@@ -163,6 +170,7 @@ export default async function TodayPage({ params }: Props) {
           )}
           <AlertsCard
             alerts={data.alerts}
+            canResolve={['owner', 'manager'].includes(ctx.role) || ctx.profile.isSuperAdmin}
             needsHuman={data.needsHuman}
             canInbox={can('inbox')}
             locale={locale}
