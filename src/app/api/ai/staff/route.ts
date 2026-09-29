@@ -111,7 +111,7 @@ export async function POST(request: Request) {
   // Persistent, per-user budget guard. For stronger production limits add an
   // atomic Redis/Postgres rate limiter before exposing this to many users.
   const since = new Date(Date.now() - 3_600_000);
-  const [{ used }] = await db
+  const [usage] = await db
     .select({ used: count() })
     .from(auditLogs)
     .where(
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       ),
     );
 
-  if (used >= 20) return Response.json({ error: 'Hourly AI limit reached' }, { status: 429 });
+  if ((usage?.used ?? 0) >= 20) return Response.json({ error: 'Hourly AI limit reached' }, { status: 429 });
 
   await db.insert(auditLogs).values({
     orgId: ctx.org.id,

@@ -80,7 +80,7 @@
       "reports": "Reports",
       "channels": "Channels (OTA)",
       "settings": "Settings",
-      "assistant": "Ask your hotel",
+      "assistant": "Ask your hotel"
     }
   },
   "shell": {
@@ -144,7 +144,7 @@
       "revenue": "Yesterday you earned <b>{amount}</b>, {dir, select, up {<b>{pct}</b> more than} down {<b>{pct}</b> less than} other {the same as}} the same day last week.",
       "revenueNoCompare": "Yesterday you earned <b>{amount}</b>.",
       "occupancy": "Tonight the hotel is <b>{occ}</b> full ({occupied} of {total} rooms).",
-      "movements": "Today <b>{arrivals, plural, =0 {no bookings} one {# booking} other {# bookings}}</b> arrive{vip, plural, =0 {} other {, # of them VIP,}} and {departures, plural, =0 {no rooms} one {# room} other {# rooms}} check out.",
+      "movements": "Today <b>{arrivals, plural, =0 {no bookings} one {# booking} other {# bookings}}</b> arrive{vip, plural, =0 {} other {, # of them VIP}} and {departures, plural, =0 {no rooms} one {# room} other {# rooms}} check out.",
       "peak": "The busiest day this week is {day}, at <b>{occ}</b>.",
       "attention": "<b>{count, plural, one {# thing needs} other {# things need}}</b> your attention.",
       "allGood": "Nothing urgent. A calm day, like the sea at dawn.",

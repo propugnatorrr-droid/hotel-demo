@@ -88,7 +88,7 @@ export async function quoteStay(
     nightly.push({ date, price: rate?.price ?? type.basePrice });
   }
 
-  const [{ sellable }] = await exec
+  const [sellableRow] = await exec
     .select({ sellable: sql<number>`count(*)`.mapWith(Number) })
     .from(rooms)
     .where(
@@ -121,7 +121,7 @@ export async function quoteStay(
     if (used > peak) peak = used;
   }
 
-  const available = sellable - peak;
+  const available = (sellableRow?.sellable ?? 0) - peak;
   if (available <= 0) return { ok: false, reason: 'soldOut' };
 
   return {
@@ -140,4 +140,81 @@ export async function priceNights(
   exec: Exec,
   input: { orgId: string; roomTypeId: string; checkIn: string; checkOut: string },
 ) {
-  const nights = diffD
+  const nights = diffDays(input.checkOut, input.checkIn);
+  const [type] = await exec
+    .select({ basePrice: roomTypes.basePrice })
+    .from(roomTypes)
+    .where(and(eq(roomTypes.orgId, input.orgId), eq(roomTypes.id, input.roomTypeId)))
+    .limit(1);
+  if (!type || nights < 1) return null;
+  const rates = await exec
+    .select({ date: dailyRates.date, price: dailyRates.price })
+    .from(dailyRates)
+    .where(
+      and(
+        eq(dailyRates.orgId, input.orgId),
+        eq(dailyRates.roomTypeId, input.roomTypeId),
+        gte(dailyRates.date, input.checkIn),
+        lt(dailyRates.date, input.checkOut),
+      ),
+    );
+  const byDate = new Map(rates.map((r) => [r.date, r.price]));
+  const nightly = Array.from({ length: nights }, (_, i) => {
+    const date = addDays(input.checkIn, i);
+    return { date, price: byDate.get(date) ?? type.basePrice };
+  });
+  return { nights, nightly, total: round2(nightly.reduce((sum, n) => sum + n.price, 0)) };
+}
+
+function clashSql(orgId: string, checkIn: string, checkOut: string, excludeBookingId?: string) {
+  return sql`exists (
+    select 1 from bookings b
+    where b.org_id = ${orgId}
+      and b.room_id = ${rooms.id}
+      and b.status in ('tentative','confirmed','checked_in')
+      and b.check_in < ${checkOut}
+      and b.check_out > ${checkIn}
+      ${excludeBookingId ? sql`and b.id <> ${excludeBookingId}` : sql``}
+  )`;
+}
+
+/** Free rooms of a type, best first: inspected → clean → dirty. */
+export async function findFreeRooms(
+  exec: Exec,
+  input: { orgId: string; roomTypeId: string; checkIn: string; checkOut: string; excludeBookingId?: string },
+) {
+  return exec
+    .select({ id: rooms.id, number: rooms.number, status: rooms.status })
+    .from(rooms)
+    .where(
+      and(
+        eq(rooms.orgId, input.orgId),
+        eq(rooms.roomTypeId, input.roomTypeId),
+        eq(rooms.isActive, true),
+        ne(rooms.status, 'out_of_order'),
+        sql`not ${clashSql(input.orgId, input.checkIn, input.checkOut, input.excludeBookingId)}`,
+      ),
+    )
+    .orderBy(sql`case ${rooms.status} when 'inspected' then 0 when 'clean' then 1 else 2 end`, asc(rooms.number));
+}
+
+export async function roomIsFree(
+  exec: Exec,
+  input: { orgId: string; roomId: string; checkIn: string; checkOut: string; excludeBookingId?: string },
+) {
+  const [clash] = await exec
+    .select({ id: bookings.id })
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.orgId, input.orgId),
+        eq(bookings.roomId, input.roomId),
+        inArray(bookings.status, [...HOLDING_STATUSES]),
+        lt(bookings.checkIn, input.checkOut),
+        gt(bookings.checkOut, input.checkIn),
+        input.excludeBookingId ? ne(bookings.id, input.excludeBookingId) : undefined,
+      ),
+    )
+    .limit(1);
+  return !clash;
+}

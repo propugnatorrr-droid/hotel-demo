@@ -17,7 +17,7 @@ export function createRng(seed: number) {
 
   const chance = (p: number) => next() < p;
 
-  const weighted = <K extends string>(weights: Readonly<Record<K, number>>): K => {
+  const weighted = <K extends string>(weights: Readonly<Partial<Record<K, number>>>): K => {
     const entries = Object.entries(weights) as [K, number][];
     const total = entries.reduce((sum, [, w]) => sum + w, 0);
     let r = next() * total;

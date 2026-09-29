@@ -141,7 +141,7 @@ async function main() {
   const bookingRows: BookingRow[] = [];
 
   const makeBooking = (room: RoomRow, checkIn: string, checkOut: string, nights: number): BookingRow => {
-    const source = rng.weighted(room.typeCode === 'VIL' ? D.SOURCE_WEIGHTS_VILLA : D.SOURCE_WEIGHTS);
+    const source = rng.weighted<(typeof s.bookingSource.enumValues)[number]>(room.typeCode === 'VIL' ? D.SOURCE_WEIGHTS_VILLA : D.SOURCE_WEIGHTS);
     const guest = rng.pick(guestRows);
     const type = typeByCode.get(room.typeCode)!;
     const total = dateRange(checkIn, checkOut).reduce((sum, n) => sum + rateOf(room.typeCode, n), 0);

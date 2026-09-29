@@ -121,7 +121,7 @@ function GuestBody({
         tags: f.get('tags') || undefined,
         notes: f.get('notes') || undefined,
       });
-      setMsg(res.ok ? { ok: true, text: c.saved } : { ok: false, text: b.errors[res.error] ?? b.errors.unknown });
+      setMsg(res.ok ? { ok: true, text: c.saved } : { ok: false, text: b.errors[res.error] ?? b.errors.unknown ?? '' });
     });
   }
 
