@@ -605,3 +605,10 @@ and is not implemented by this staff endpoint.
   staff AI. Double booking prevented by advisory lock per room type plus the
   DB exclusion constraint in supabase/sql/06.
 - [ ] Batch 7: calendar/tape chart with drag-to-move using assignRoom.
+- [x] Batch 7: master calendar /app/calendar: room rows grouped by type, unassigned
+  lane, channel colours, 14/30/60-day windows + zoom, drag to move room (assignRoom),
+  drag dates / resize with server preview (changeStay: quote engine, keep vs requote,
+  manager-only keep when nights change, OTA warning), per-type availability + price row,
+  manager bulk rates editor (price / min stay / open-closed, weekday filter, upsert),
+  Supabase Realtime refresh (bookings, rooms, daily_rates) with landing pulse.
+- [ ] Batch 8: integration layer + channel adapter (push rates from updateRates).
