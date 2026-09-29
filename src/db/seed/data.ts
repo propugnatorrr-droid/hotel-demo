@@ -50,7 +50,7 @@ export const USERS: { key: DemoUserKey; email: string; fullName: string; role: E
 ];
 
 export const INTEGRATIONS: E<typeof integrationProvider>[] = [
-  'channex', 'ical', 'meta_whatsapp', 'meta_instagram', 'meta_messenger', 'paysera', 'easypos', 'vapi', 'resend', 'ai',
+  'channex', 'ical', 'meta_whatsapp', 'meta_instagram', 'meta_messenger', 'paysera', 'easypos', 'fature_al', 'vapi', 'resend', 'ai', 'telegram',
 ];
 
 export const OUT_OF_ORDER_ROOM = '108';

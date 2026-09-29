@@ -316,7 +316,7 @@ async function main() {
       invoiceRows.push({
         id: invoiceId, orgId, number: `${invoiceSeq}/${year}`, folioId, guestId: b.guestId, buyerName: guestName(b.guestId),
         issuedAt, subtotal: r2(total - vat), vatTotal: vat, total, currency: 'EUR', paymentMethod: method, status: 'fiscalized',
-        nivf: uuid(), nslf, fiscalProvider: 'mock', fiscalResponse: { mock: true },
+        nivf: nslf, nslf: uuid(), fiscalProvider: 'mock', fiscalResponse: { mock: true },
         // MOCK verification link, not a real fiscal QR
         qrUrl: `https://efiskalizimi-app-test.tatime.gov.al/invoice-check/#/verify?iic=${nslf}&tin=${D.ORG.nipt}&crtd=${encodeURIComponent(issuedAt.toISOString())}&prc=${total.toFixed(2)}`,
         issuedBy: userIds.receptionist,
