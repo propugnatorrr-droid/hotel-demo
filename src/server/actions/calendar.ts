@@ -11,6 +11,7 @@ import { requireOrg } from '@/lib/auth/session';
 import { addDays, diffDays, todayIn } from '@/lib/dates';
 import { lockInventory, quoteStay, roomIsFree, type QuoteWarning } from '@/server/services/stay';
 import type { ActionResult } from './bookings';
+import { queueChannelPush } from '@/server/services/channel-sync';
 
 type Ctx = Awaited<ReturnType<typeof requireOrg>>;
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -41,7 +42,10 @@ function pgCode(e: unknown) {
 async function run<T>(fn: () => Promise<T>, mutate = true): Promise<ActionResult<T>> {
   try {
     const data = await fn();
-    if (mutate) revalidatePath('/[locale]/app', 'layout');
+    if (mutate) {
+      revalidatePath('/[locale]/app', 'layout');
+      await queueChannelPush();
+    }
     return { ok: true, data };
   } catch (error) {
     unstable_rethrow(error);
@@ -288,7 +292,7 @@ export async function updateRates(input: unknown): Promise<ActionResult<{ days: 
         entityId: p.roomTypeId,
         meta: { from: p.from, to: p.to, weekdays: p.weekdays, price: p.price, minStay: p.minStay, closed: p.closed, days: dates.length },
       });
-      // Batch 8: push rates/availability to channels through the channel adapter here.
+      await queueChannelPush(ctx.org.id, { availability: true, restrictions: true });
       return { days: dates.length };
     });
   });
