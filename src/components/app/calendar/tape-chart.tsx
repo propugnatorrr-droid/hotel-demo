@@ -466,4 +466,103 @@ export function TapeChart({ data, from, days, today, locale, currency, manager }
                           : c.available <= 0
                             ? 'text-danger'
                             : c.available <= 2
-                              ? 'text-g
+                              ? 'text-g                      >
+                        {c.closed ? (
+                          <Lock className="size-3 text-subtle" />
+                        ) : (
+                          <span className={cn('font-medium', tone)}>{c.available}</span>
+                        )}
+                        {dayW >= 48 && <span className="text-subtle">{Math.round(c.price)}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {typeRooms.map((room) => {
+                  const ooo = room.status === 'out_of_order';
+                  const target = drag?.mode === 'move' && drag.row === room.id;
+                  return (
+                    <div
+                      key={room.id}
+                      data-row={room.id}
+                      className={cn('relative flex border-b border-border/70', target && 'bg-ionian-100/50 dark:bg-ionian-900/40')}
+                      style={{ height: ROW_H }}
+                    >
+                      <div className={cn(label, 'bg-surface text-sm')} style={{ width: LABEL_W }} title={t.roomStatus[room.status]}>
+                        <span className={cn('size-2 rounded-full', ROOM_DOT[room.status])} />
+                        <span className="font-medium tabular-nums">{room.number}</span>
+                        {ooo && <Wrench className="size-3 text-danger" />}
+                      </div>
+                      <div className="relative" style={track(ooo)}>
+                        {(byRoom.get(room.id) ?? []).map((b) => block(b, 0))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+
+          {todayIdx >= 0 && todayIdx < days && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 z-20 w-px bg-gold-500"
+              style={{ left: LABEL_W + todayIdx * dayW + dayW / 2 }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* Legend */}
+  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-muted">
+    {sources.map((s) => (
+      <span key={s} className="inline-flex items-center gap-1.5">
+        <span className="size-2.5 rounded-sm" style={{ background: SOURCE_COLOR[s] }} />
+        {bt.source[s]}
+      </span>
+    ))}
+  </div>
+
+  {toast && (
+    <div
+      role="status"
+      className={cn(
+        'animate-fade-up fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full px-5 py-2.5 text-sm shadow-float',
+        toast.tone === 'ok' ? 'bg-ionian-950 text-limestone-50' : 'bg-danger text-white',
+      )}
+    >
+      {toast.text}
+    </div>
+  )}
+
+  <StayChangeSheet
+    change={change}
+    locale={locale}
+    money={money}
+    errorText={errorText}
+    onClose={(saved) => {
+      if (change && !saved) revert(change.booking.id);
+      if (saved) setToast({ tone: 'ok', text: t.saved });
+      setChange(null);
+    }}
+  />
+
+  {manager && (
+    <RatesSheet
+      target={rateTarget}
+      types={data.types}
+      inventory={inventory}
+      today={today}
+      locale={locale}
+      currency={currency}
+      errorText={errorText}
+      onClose={(days) => {
+        if (days) setToast({ tone: 'ok', text: t.ratesSaved(days) });
+        setRateTarget(null);
+      }}
+    />
+  )}
+</div>
+); }
