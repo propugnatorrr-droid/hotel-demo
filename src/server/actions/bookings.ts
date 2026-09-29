@@ -9,6 +9,7 @@ import { auditLogs, bookings, folioItems, folios, guests, housekeepingTasks, pay
 import { requireOrg } from '@/lib/auth/session';
 import { todayIn } from '@/lib/dates';
 import { findFreeRooms, lockInventory, quoteStay, roomIsFree, type Quote } from '@/server/services/stay';
+import { queueChannelPush } from '@/server/services/channex-sync';
 
 export type ActionResult<T = null> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -40,7 +41,10 @@ function pgCode(e: unknown) {
 async function run<T>(fn: () => Promise<T>, mutate = true): Promise<ActionResult<T>> {
   try {
     const data = await fn();
-    if (mutate) revalidatePath('/[locale]/app', 'layout');
+    if (mutate) {
+      revalidatePath('/[locale]/app', 'layout');
+      await queueChannelPush();
+    }
     return { ok: true, data };
   } catch (error) {
     unstable_rethrow(error); // keep login redirects working

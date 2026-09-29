@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { bookings, dailyRates, rooms, roomTypes } from '@/db/schema';
 import { addDays, diffDays, todayIn } from '@/lib/dates';
+import { queueChannelPush } from '@/server/services/channex-sync';
 import { findFreeRooms, lockInventory, priceNights, quoteStay, roomIsFree } from '@/server/services/stay';
 import { audit, fail, FRONT, gate, isManager, MANAGERS, round2, run, type ActionResult } from './kit';
 
@@ -100,6 +101,9 @@ export async function moveBooking(input: unknown): Promise<ActionResult<{ total:
         to: { checkIn, checkOut, room: roomId, roomNumber },
       });
       return { total };
+    }).then(async (r) => {
+      await queueChannelPush(ctx.org.id, { availability: true, restrictions: false }).catch(() => undefined);
+      return r;
     });
   });
 }
@@ -172,6 +176,9 @@ export async function setRates(input: unknown): Promise<ActionResult<{ days: num
       }
       await audit(tx, ctx, 'rates.updated', 'room_type', p.roomTypeId, { from: p.from, to: p.to, days: rows.length });
       return { days: rows.length };
+    }).then(async (r) => {
+      await queueChannelPush(ctx.org.id, { availability: true, restrictions: true }).catch(() => undefined);
+      return r;
     });
   });
 }

@@ -9,6 +9,7 @@ import { escapeHtml, sendEmail } from '@/lib/integrations/email';
 import { createCheckout } from '@/lib/integrations/payments';
 import { ActionError, round2 } from '@/server/actions/kit';
 import { findFreeRooms, lockInventory, quoteStay } from '@/server/services/stay';
+import { queueChannelPush } from '@/server/services/channex-sync';
 import { signBooking, type PublicOrg } from '@/server/services/public-site';
 
 export const stayInput = z.object({
@@ -94,6 +95,7 @@ export async function createWebBookingCore(pub: PublicOrg, p: BookInput) {
     return b!;
   });
 
+  void queueChannelPush(org.id, { availability: true }).catch(() => undefined);
   const token = signBooking(created.code);
   const prefix = p.locale === 'en' ? '/en' : '';
   const detailPath = `${prefix}/r/${org.slug}/booking/${created.code}?t=${token}`;

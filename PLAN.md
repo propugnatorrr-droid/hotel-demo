@@ -631,3 +631,10 @@ comes only from the seed.
 - Offline fiscalization, guest/staff native apps, HR/accounting apps remain roadmap.
 - Real photos: room type `images` and org `coverImageUrl` are editable in Settings; the site uses generated art until then.
 
+### Merge note (2026-09-29)
+A parallel GitHub-side Batch 7/8 (tape-chart UI, Channex revision ingest, `channel_events` table, `supabase/sql/07-08`)
+was merged with this build. Kept: the verified calendar and channel UI from this branch. Their tape-chart UI file was
+syntactically broken and was removed. Their Channex backend is kept as `src/server/services/channex-sync.ts`,
+`src/server/integrations/channel/*` and `/api/channels/*` (booking actions call `queueChannelPush`). It has no UI yet:
+wire `pullChannex` / `pushAri` into `/app/channels` when a Channex account exists.
+
