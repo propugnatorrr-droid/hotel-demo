@@ -75,9 +75,11 @@ export const requireOrg = cache(async (): Promise<OrgContext> => {
     .where(and(eq(memberships.userId, user.id), eq(memberships.isActive, true)))
     .orderBy(asc(organizations.name));
 
-  if (list.length === 0 && profile.isSuperAdmin) {
+  if (profile.isSuperAdmin) {
+    // Super admins can enter every hotel (support / impersonation); keep their real role where they are members.
     const all = await db.select().from(organizations).orderBy(asc(organizations.name));
-    list = all.map((org) => ({ org, role: 'owner' as const }));
+    const own = new Map(list.map((r) => [r.org.id, r.role]));
+    list = all.map((org) => ({ org, role: own.get(org.id) ?? ('owner' as const) }));
   }
 
   if (list.length === 0) return redirectToLogin('?error=noMembership');
