@@ -80,7 +80,8 @@
       "reports": "Reports",
       "channels": "Channels (OTA)",
       "settings": "Settings",
-      "assistant": "Ask your hotel"
+      "assistant": "Ask your hotel",
+      "voice": "Voice assistant"
     }
   },
   "shell": {

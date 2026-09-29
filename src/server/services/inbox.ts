@@ -92,7 +92,7 @@ export async function processInbound(input: Inbound) {
     return;
   }
   try {
-    const out = await guestAiReply({ pub, conv, message: input.text, locale: lang });
+    const out = await guestAiReply({ pub, conv, message: input.text, locale: lang, source: input.channel });
     await reply(out.text);
     if (out.handedOff) await db.update(conversations).set({ status: 'needs_human' }).where(eq(conversations.id, conv.id));
   } catch (e) {

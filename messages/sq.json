@@ -80,7 +80,8 @@
       "reports": "Raportet",
       "channels": "Kanalet (OTA)",
       "settings": "Cilësimet",
-      "assistant": "Pyet hotelin"
+      "assistant": "Pyet hotelin",
+      "voice": "Asistenti zanor"
     }
   },
   "shell": {
