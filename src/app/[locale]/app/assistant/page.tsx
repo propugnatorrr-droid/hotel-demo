@@ -1,21 +1,16 @@
 import { notFound } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
-import { OwnerAssistant } from '@/components/app/owner-assistant';
-import { StaffAssistant } from '@/components/app/operations/staff-assistant';
+import { AgentChat } from '@/components/app/agent/agent-chat';
 import { requireOrg } from '@/lib/auth/session';
-import { todayIn } from '@/lib/dates';
+import { toolsFor } from '@/server/services/agent/tools';
 
-type Props = { params: Promise<{ locale: string }> };
+type Props = { params: Promise<{ locale: string }>; searchParams: Promise<{ q?: string }> };
 
-export default async function AssistantPage({ params }: Props) {
+export default async function AssistantPage({ params, searchParams }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const ctx = await requireOrg();
-
-  if (!ctx.modules.has('pms') || !['owner', 'manager', 'receptionist', 'housekeeping', 'accountant'].includes(ctx.role)) notFound();
-
-  const money = ['owner', 'manager', 'accountant'].includes(ctx.role) || ctx.profile.isSuperAdmin;
-  if (money && ctx.modules.has('owner_ai')) return <OwnerAssistant locale={locale} currency={ctx.org.currency} />;
-  if (ctx.role === 'accountant') notFound();
-  return <StaffAssistant locale={locale} today={todayIn(ctx.org.timezone)} />;
+  if (!ctx.modules.has('pms') || toolsFor(ctx).length === 0) notFound();
+  const { q } = await searchParams;
+  return <AgentChat locale={locale} initialQuestion={q?.slice(0, 600)} />;
 }

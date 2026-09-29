@@ -53,6 +53,7 @@ export function AskPanel({ question, mode, locale, currency }: { question: strin
         <div className="mt-4 space-y-4">
           <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{state.data.answer}</p>
           {state.data.chart && <MiniChart chart={state.data.chart} locale={locale} currency={currency} />}
+          <Link href={`/app/assistant?q=${encodeURIComponent(question)}`} className="ai-glow inline-flex h-9 items-center gap-2 rounded-full px-4 text-xs font-medium"><Sparkles className="size-3.5 text-accent" /> {locale === 'en' ? 'Let the agent do it' : 'Le ta bëjë agjenti'}</Link>
           {state.data.links.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {state.data.links.map((l) => (

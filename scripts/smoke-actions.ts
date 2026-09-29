@@ -102,4 +102,45 @@ export async function runActions(opts: { db: never; ctx: never; org: { id: strin
   await check('iCal SSRF guard (http/localhost)', () => A.channels.saveMapping({ roomTypeId: t2!.id, channel: 'airbnb', icalImportUrl: 'http://localhost/x.ics' }), (r) => ((r as R).error === 'badUrl' ? null : JSON.stringify(r)));
   await check('public searchStay', () => A.public.searchStay({ slug: 'vala', checkIn: addDays(today, 90), checkOut: addDays(today, 93), adults: 2, children: 0, locale: 'sq' }), (r) => ((r as R).ok && (r as { data: { options: unknown[] } }).data.options.length ? null : JSON.stringify(r)));
   await check('public sendInquiry lands in inbox', () => A.public.sendInquiry({ slug: 'vala', name: 'Smoke', email: 'a@b.co', message: 'Pyetje për dasmë', locale: 'sq' }), ok);
+
+  // Agent tool layer: natural keys (codes, room numbers) resolve to ids and run the real actions.
+  const agent = await import('../src/server/services/agent/run');
+  const tools = await import('../src/server/services/agent/tools');
+  await check('agent toolset for owner is broad', async () => tools.toolsFor(ctx).length, (n) => (n >= 30 ? null : `only ${n}`));
+  await check('agent: list_rooms', () => agent.executeTool(ctx, 'list_rooms', {}, 'auto'), (r) => (r.ok ? null : JSON.stringify(r)));
+  const types = (await agent.executeTool(ctx, 'list_room_types', {}, 'auto')) as { ok: boolean; result: { code: string }[] };
+  const code = types.result?.[0]?.code ?? 'STD';
+  const made = (await check('agent: create_booking by room-type code', () => agent.executeTool(ctx, 'create_booking', { room_type: code, checkIn: addDays(today, 150), checkOut: addDays(today, 152), adults: 2, status: 'tentative', guest: { first: 'Agent', last: 'Test', phone: '+355691112233' } }, 'human'), (r) => (r.ok ? null : JSON.stringify(r)))) as { ok: boolean; result?: { code: string } };
+  if (made?.ok && made.result?.code) {
+    await check('agent: find_bookings by name', () => agent.executeTool(ctx, 'find_bookings', { query: 'Agent Test' }, 'auto'), (r) => (r.ok && (r.result as unknown[]).length ? null : JSON.stringify(r)));
+    await check('agent: confirm_booking by code', () => agent.executeTool(ctx, 'confirm_booking', { code: made.result!.code }, 'human'), (r) => (r.ok ? null : JSON.stringify(r)));
+    await check('agent: cancel_booking needs reason, works with it', () => agent.executeTool(ctx, 'cancel_booking', { code: made.result!.code, reason: 'agent smoke' }, 'human'), (r) => (r.ok ? null : JSON.stringify(r)));
+  }
+  await check('agent: set_room_status (FormData action)', () => agent.executeTool(ctx, 'set_room_status', { room_number: '101', status: 'dirty' }, 'human'), (r) => (r.ok ? null : JSON.stringify(r)));
+  await check('agent: create_housekeeping_task', () => agent.executeTool(ctx, 'create_housekeeping_task', { room_number: '101', type: 'inspection', notes: 'agent smoke' }, 'human'), (r) => (r.ok ? null : JSON.stringify(r)));
+  await check('agent: report_maintenance', () => agent.executeTool(ctx, 'report_maintenance', { room_number: '102', title: 'Test fault from agent' }, 'human'), (r) => (r.ok ? null : JSON.stringify(r)));
+  await check('agent: unknown room gives helpful error', () => agent.executeTool(ctx, 'set_room_status', { room_number: '99999', status: 'clean' }, 'human'), (r) => (!r.ok && /No room/.test(r.error) ? null : JSON.stringify(r)));
+  await check('agent: set_rates via room-type code', () => agent.executeTool(ctx, 'set_rates', { room_type: code, from: addDays(today, 30), to: addDays(today, 33), adjust_pct: 5 }, 'human'), (r) => (r.ok ? null : JSON.stringify(r)));
+  await check('agent: get_kpis', () => agent.executeTool(ctx, 'get_kpis', { from: addDays(today, -7), to: today }, 'auto'), (r) => (r.ok ? null : JSON.stringify(r)));
+  await check('agent: role gate hides finance tools from housekeeping', async () => tools.toolsFor({ ...(ctx as object), role: 'housekeeping', profile: { ...(ctx as { profile: object }).profile, isSuperAdmin: false } } as never).map((t) => t.name), (n) => (!n.includes('get_kpis') && n.includes('set_room_status') ? null : n.join(',')));
+
+  // Optional live LLM test (only when OPENROUTER_API_KEY is set in the environment).
+  if (process.env.OPENROUTER_API_KEY) {
+    const { POST } = await import('../src/app/api/ai/agent/route');
+    const run = async (message: string, autoRun: boolean) => {
+      const res = await POST(new Request('http://x/api/ai/agent', { method: 'POST', body: JSON.stringify({ message, autoRun, locale: 'sq', history: [] }) }));
+      const text = await res.text();
+      return text.split('
+
+').filter((l) => l.startsWith('data: ')).map((l) => JSON.parse(l.slice(6)) as { type: string; [k: string]: unknown });
+    };
+    const a = await check('LLM agent (review mode) proposes instead of writing', () => run(`Rezervo një dhomë ${code} për 2 persona nga ${addDays(today, 170)} deri ${addDays(today, 172)} për Ana Testuese, tel +355691000111`, false), (ev) => (ev.some((e) => e.type === 'proposal' && e.tool === 'create_booking') ? null : JSON.stringify(ev.map((e) => e.type + ':' + (e.tool ?? e.name ?? ''))) + ' ' + JSON.stringify(ev.find((e) => e.type === 'answer' || e.type === 'error'))));
+    console.log('    events:', a?.map((e) => e.type + (e.tool ? `(${e.tool})` : e.name ? `(${e.name})` : '')).join(' → '));
+    console.log('    answer:', (a?.find((e) => e.type === 'answer')?.text as string | undefined)?.slice(0, 200));
+    const b = await check('LLM agent (auto mode) reads then writes', () => run('Shëno dhomën 103 si të pastër.', true), (ev) => (ev.some((e) => e.type === 'tool_done' && e.write && e.ok) ? null : JSON.stringify(ev.map((e) => e.type + ':' + (e.name ?? e.error ?? '')))));
+    console.log('    events:', b?.map((e) => e.type + (e.name ? `(${e.name})` : '')).join(' → '));
+    console.log('    answer:', (b?.find((e) => e.type === 'answer')?.text as string | undefined)?.slice(0, 200));
+    const c = await check('LLM agent answers a data question with tools', () => run('Sa është pushtimi i 7 ditëve të fundit?', true), (ev) => (ev.some((e) => e.type === 'tool' && /kpi|occupancy/i.test(String(e.name))) ? null : JSON.stringify(ev.map((e) => e.type + ':' + (e.name ?? '')))));
+    console.log('    answer:', (c?.find((e) => e.type === 'answer')?.text as string | undefined)?.slice(0, 260));
+  }
 }
