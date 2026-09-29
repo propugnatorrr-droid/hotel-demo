@@ -3,10 +3,9 @@ import { ThemeToggle } from '@/components/theme/theme-toggle';
 import type { OrgContext } from '@/lib/auth/session';
 import { CommandTrigger } from './command-trigger';
 import { LocaleSwitch } from './locale-switch';
-import { MobileNav } from './mobile-nav';
 import { UserMenu } from './user-menu';
 
-export async function Topbar({ ctx, navKeys }: { ctx: OrgContext; navKeys: string[] }) {
+export async function Topbar({ ctx }: { ctx: OrgContext }) {
   const locale = await getLocale();
   const date = new Intl.DateTimeFormat(locale === 'sq' ? 'sq-AL' : 'en-GB', {
     weekday: 'long',
@@ -16,8 +15,7 @@ export async function Topbar({ ctx, navKeys }: { ctx: OrgContext; navKeys: strin
   }).format(new Date());
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-xl md:px-8">
-      <MobileNav navKeys={navKeys} orgs={ctx.orgs} activeOrgId={ctx.org.id} simpleMode={ctx.profile.simpleMode} />
+    <header className="sticky top-0 z-30 flex h-[calc(4rem+env(safe-area-inset-top))] items-center gap-3 border-b border-border bg-background/80 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl md:px-8">
       <p className="hidden w-44 shrink-0 text-sm text-muted first-letter:uppercase xl:block">{date}</p>
       <div className="flex min-w-0 flex-1 justify-center">
         <CommandTrigger />

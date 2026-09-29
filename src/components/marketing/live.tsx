@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import { Fragment, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { AnimatePresence, motion, useInView, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import { CheckCheck, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,14 +18,20 @@ export const HOW_PHOTOS = [`${IMG}/exterior-day.jpg`, `${IMG}/back-office.jpg`, 
 
 /* ─── primitives ─────────────────────────────────────────── */
 
-export function Photo({ src, alt, className, priority, sizes = '100vw', reveal }: { src: string; alt: string; className?: string; priority?: boolean; sizes?: string; reveal?: boolean }) {
+export function Photo({ src, alt, className, priority, sizes = '100vw', reveal, position }: { src: string; alt: string; className?: string; priority?: boolean; sizes?: string; reveal?: boolean; position?: string }) {
   const [failed, setFailed] = useState(false);
   const inner = failed
     ? <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_70%_20%,var(--color-ionian-600),var(--color-ionian-950))]" />
-    : <Image src={src} alt={alt} fill priority={priority} sizes={sizes} onError={() => setFailed(true)} className="object-cover" />;
+    : <Image src={src} alt={alt} fill priority={priority} sizes={sizes} onError={() => setFailed(true)} style={position ? { objectPosition: position } : undefined} className="object-cover" />;
   if (!reveal) return <div className={cn('relative overflow-hidden', className)}>{inner}</div>;
   return (
-    <motion.div initial={{ clipPath: 'inset(100% 0 0 0)' }} whileInView={{ clipPath: 'inset(0% 0 0 0)' }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 1.4, ease: EASE }} className={cn('relative overflow-hidden', className)}>
+    <motion.div
+      initial={{ clipPath: 'inset(100% 0 0 0)', filter: 'saturate(0.2) brightness(1.2)' }}
+      whileInView={{ clipPath: 'inset(0% 0 0 0)', filter: 'saturate(1) brightness(1)' }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ clipPath: { duration: 1.4, ease: EASE }, filter: { duration: 2.4, delay: 0.3, ease: EASE } }}
+      className={cn('relative overflow-hidden', className)}
+    >
       {inner}
     </motion.div>
   );
@@ -238,32 +244,111 @@ export function LiveCalendar({ label, locale }: { label: string; locale: string 
 
 /* ─── feature cards ──────────────────────────────────────── */
 
-export function FeatureCard({ index, big, photo, icon, title, text, children }: { index: number; big: boolean; photo: string; icon: ReactNode; title: string; text: string; children?: ReactNode }) {
-  function move(e: React.MouseEvent<HTMLElement>) {
-    const r = e.currentTarget.getBoundingClientRect();
-    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
-  }
+const CAPTIONS: Record<string, { sq: string; en: string }> = {
+  ask: { sq: 'Terasa · 06:40', en: 'Terrace · 06:40' },
+  calendar: { sq: 'Recepsioni · 09:12', en: 'Reception · 09:12' },
+  channels: { sq: 'Vala · Dhërmi', en: 'Vala · Dhërmi' },
+  inbox: { sq: 'Ballkoni · 10:05', en: 'Balcony · 10:05' },
+  pos: { sq: 'Bari i pishinës · 16:20', en: 'Pool bar · 16:20' },
+  fiscal: { sq: 'Restoranti · 20:45', en: 'Restaurant · 20:45' },
+  ocr: { sq: 'Zyra · 11:30', en: 'Back office · 11:30' },
+  voice: { sq: 'Suita 204 · 22:10', en: 'Suite 204 · 22:10' },
+  alerts: { sq: 'Natën · 02:14', en: 'Night · 02:14' },
+};
+
+/** Always-visible photo: develops in colour on view, drifts with scroll, settles on hover. */
+function CardPhoto({ src, sizes, py }: { src: string; sizes: string; py: MotionValue<string> }) {
+  const [failed, setFailed] = useState(false);
   return (
-    <motion.article onMouseMove={move} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 1, ease: EASE, delay: (index % 3) * 0.08 }}
-      className={cn('feature-card group relative isolate flex min-h-[320px] flex-col overflow-hidden rounded-[28px] border p-7', big ? 'border-transparent bg-ionian-950 text-limestone-50 md:col-span-2' : 'border-limestone-200 bg-white')}>
-      <div className="feature-photo absolute inset-0 -z-10">
-        <Photo src={photo} alt="" sizes="(min-width:768px) 66vw, 100vw" className="absolute inset-0 scale-110 transition-transform duration-[1800ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-100" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ionian-950 via-ionian-950/75 to-ionian-950/30" />
-      </div>
-      {big && <div className="bg-qilim pointer-events-none absolute inset-0 -z-20 opacity-20" />}
-      <div className="flex items-start justify-between">
-        <div className={cn('grid size-11 place-items-center rounded-full border transition-colors duration-700 group-hover:border-gold-400/60 group-hover:text-gold-400', big ? 'border-white/20 text-gold-400' : 'border-limestone-300 text-ionian-700')}>{icon}</div>
-        <span className={cn('font-mono text-xs transition-colors duration-700 group-hover:text-limestone-200', big ? 'text-ionian-300' : 'text-limestone-500')}>{String(index + 1).padStart(2, '0')}</span>
-      </div>
-      <div className={cn('mt-auto', big && 'md:grid md:grid-cols-[1fr_1.1fr] md:items-end md:gap-8')}>
-        <div className="pt-10">
-          <h3 className="font-display text-3xl transition-colors duration-700 group-hover:text-limestone-50 md:text-4xl">{title}</h3>
-          <p className={cn('mt-3 max-w-md text-sm leading-relaxed transition-colors duration-700 group-hover:text-ionian-100', big ? 'text-ionian-200' : 'text-limestone-700')}>{text}</p>
+    <motion.div style={{ y: py }} className="absolute inset-x-0 -inset-y-[12%]">
+      <motion.div
+        initial={{ scale: 1.16, filter: 'saturate(0.25) brightness(1.2)' }}
+        whileInView={{ scale: 1.06, filter: 'saturate(1) brightness(1)' }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 2.4, ease: EASE }}
+        className="absolute inset-0"
+      >
+        <div className="absolute inset-0 transition-transform duration-[1800ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[0.955]">
+          {failed
+            ? <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_70%_20%,var(--color-ionian-600),var(--color-ionian-950))]" />
+            : <Image src={src} alt="" fill sizes={sizes} onError={() => setFailed(true)} className="object-cover" />}
         </div>
-        {children && <div className="mt-8 md:mt-0">{children}</div>}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+export function FeatureCard({ k, locale, index, big, photo, icon, title, text, children }: { k?: string; locale?: string; index: number; big: boolean; photo: string; icon: ReactNode; title: string; text: string; children?: ReactNode }) {
+  const ref = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+  const spring = { stiffness: 140, damping: 20, mass: 0.5 };
+  const rx = useSpring(0, spring);
+  const ry = useSpring(0, spring);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const py = useTransform(scrollYProgress, [0, 1], ['-7%', '7%']);
+  const caption = k ? CAPTIONS[k]?.[locale === 'en' ? 'en' : 'sq'] : undefined;
+  const tilt = big ? 3 : 5;
+
+  function move(e: ReactPointerEvent<HTMLElement>) {
+    if (e.pointerType !== 'mouse') return;
+    const el = e.currentTarget;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    el.style.setProperty('--mx', `${x * 100}%`);
+    el.style.setProperty('--my', `${y * 100}%`);
+    if (!reduce) { ry.set((x - 0.5) * tilt); rx.set((0.5 - y) * tilt); }
+  }
+  function leave() { rx.set(0); ry.set(0); }
+
+  const motionProps = {
+    ref,
+    onPointerMove: move,
+    onPointerLeave: leave,
+    style: { rotateX: rx, rotateY: ry, transformPerspective: 1400 },
+    initial: { opacity: 0, y: 48 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-80px' },
+    transition: { duration: 1.1, ease: EASE, delay: (index % 3) * 0.08 },
+  };
+  const num = <span className="font-mono text-xs text-limestone-50/80">{String(index + 1).padStart(2, '0')}</span>;
+  const iconRing = <div className="grid size-11 place-items-center rounded-full border border-white/30 bg-white/10 text-limestone-50 backdrop-blur-md transition-colors duration-700 group-hover:border-gold-400/70 group-hover:text-gold-400">{icon}</div>;
+  const cap = caption && <span className="flex items-center gap-2 font-mono text-[10px] tracking-[0.18em] text-limestone-50/85 uppercase"><span className="size-1 rounded-full bg-gold-400" />{caption}</span>;
+  const goldLine = <span className="absolute inset-x-7 bottom-0 z-10 h-px origin-left scale-x-0 bg-gold-400 transition-transform duration-1000 group-hover:scale-x-100" />;
+
+  if (big) {
+    return (
+      <motion.article {...motionProps} className="feature-card feature-dark group relative isolate flex min-h-[440px] flex-col overflow-hidden rounded-[28px] bg-ionian-950 p-7 text-limestone-50 md:col-span-2 md:p-9">
+        <div className="absolute inset-0 -z-10 overflow-hidden"><CardPhoto src={photo} sizes="(min-width:768px) 66vw, 100vw" py={py} /></div>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-tr from-ionian-950 via-ionian-950/75 to-ionian-950/10" />
+        <div className="card-sun -z-10" />
+        <div className="flex items-center gap-4">{iconRing}{cap}<span className="ml-auto">{num}</span></div>
+        <div className="mt-auto md:grid md:grid-cols-[1fr_1.1fr] md:items-end md:gap-8">
+          <div className="pt-10">
+            <h3 className="font-display text-3xl md:text-4xl">{title}</h3>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-ionian-100/90">{text}</p>
+          </div>
+          {children && <div className="mt-8 md:mt-0">{children}</div>}
+        </div>
+        {goldLine}
+      </motion.article>
+    );
+  }
+
+  return (
+    <motion.article {...motionProps} className="feature-card feature-light group relative isolate flex flex-col overflow-hidden rounded-[28px] border border-limestone-200 bg-white">
+      <div className="relative aspect-[16/10] overflow-hidden">
+        <CardPhoto src={photo} sizes="(min-width:768px) 33vw, 100vw" py={py} />
+        <div className="absolute inset-0 bg-gradient-to-t from-ionian-950/60 via-ionian-950/5 to-ionian-950/30" />
+        <div className="card-sun" />
+        <div className="absolute inset-x-5 top-5 flex items-center justify-between">{iconRing}{num}</div>
+        <div className="absolute bottom-4 left-5">{cap}</div>
       </div>
-      <span className="absolute inset-x-7 bottom-0 h-px origin-left scale-x-0 bg-gold-400 transition-transform duration-1000 group-hover:scale-x-100" />
+      <div className="flex flex-1 flex-col p-7">
+        <h3 className="font-display text-[28px] leading-[1.08] text-ionian-950 transition-colors duration-700 group-hover:text-ionian-800 md:text-[32px]">{title}</h3>
+        <p className="mt-3 text-sm leading-relaxed text-limestone-700">{text}</p>
+      </div>
+      {goldLine}
     </motion.article>
   );
 }

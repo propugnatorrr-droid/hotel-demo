@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { haptic } from '@/lib/haptics';
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -12,8 +13,13 @@ export function useAction(errors: Record<string, string>) {
     setError(null);
     start(async () => {
       const res = await fn();
-      if (!res.ok) setError(res.error);
-      else onOk?.(res.data);
+      if (!res.ok) {
+        setError(res.error);
+        haptic('error');
+      } else {
+        haptic('success');
+        onOk?.(res.data);
+      }
     });
   }
   return { pending, error, message: error ? (errors[error] ?? errors.unknown ?? error) : null, run, clear: () => setError(null) };

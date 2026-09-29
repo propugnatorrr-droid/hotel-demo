@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
+import { siteUrl } from '@/lib/site';
 import { fontMono, fontSans, fontSerif } from '@/app/fonts';
+import { HapticsProvider } from '@/components/app/haptics-provider';
 import { ThemeProvider } from '@/components/theme/theme-provider';
 import { ThemeScript } from '@/components/theme/theme-script';
 import '@/app/globals.css';
@@ -23,10 +25,17 @@ export async function generateMetadata({ params }: Omit<Props, 'children'>): Pro
   return {
     title: t('title'),
     description: t('description'),
+    metadataBase: new URL(siteUrl()),
+    applicationName: 'Iliria',
+    appleWebApp: { capable: true, title: 'Iliria', statusBarStyle: 'black-translucent' },
+    formatDetection: { telephone: false },
   };
 }
 
 export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#fbf8f3' },
     { media: '(prefers-color-scheme: dark)', color: '#08131d' },
@@ -50,6 +59,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className="min-h-dvh antialiased">
         <NextIntlClientProvider>
           <ThemeProvider>{children}</ThemeProvider>
+          <HapticsProvider />
         </NextIntlClientProvider>
       </body>
     </html>

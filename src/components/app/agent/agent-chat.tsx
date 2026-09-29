@@ -167,11 +167,18 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
   useLayoutEffect(() => {
     const fit = () => {
       const top = root.current?.getBoundingClientRect().top ?? 0;
-      setHeight(Math.max(420, window.innerHeight - top - 8));
+      // The phone tab bar sits on top of the page; the keyboard shrinks the visual viewport.
+      const tabbar = document.querySelector<HTMLElement>('[data-tabbar]')?.offsetHeight ?? 0;
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      setHeight(Math.max(380, vh - top - 8 - tabbar));
     };
     fit();
     window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
+    window.visualViewport?.addEventListener('resize', fit);
+    return () => {
+      window.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('resize', fit);
+    };
   }, []);
   const scroll = useCallback(() => {
     const el = box.current;
@@ -281,7 +288,7 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
   }
 
   return (
-    <div ref={root} style={{ height: height ?? undefined, minHeight: height ? undefined : 'calc(100dvh - 9rem)' }} className="mx-auto -mt-3 mb-[-2.24rem] flex max-w-4xl flex-col md:-mt-8 md:mb-[-4.48rem]">
+    <div ref={root} style={{ height: height ?? undefined, minHeight: height ? undefined : 'calc(100dvh - 9rem)' }} data-no-ptr className="mx-auto -mt-3 mb-[calc(-6.5rem-env(safe-area-inset-bottom))] flex max-w-4xl flex-col md:-mt-8 lg:mb-[-4.48rem]">
       {turns.length > 0 && (
         <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 items-center gap-3 border-b border-border pb-4">
           <span className="ai-glow grid size-10 place-items-center rounded-full"><Sparkles className="size-4 text-accent" /></span>
@@ -334,7 +341,7 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
 
       <div className="relative shrink-0 bg-background pt-3 pb-4 before:pointer-events-none before:absolute before:inset-x-0 before:-top-8 before:h-8 before:bg-gradient-to-t before:from-background before:to-transparent">
         <form onSubmit={(e) => { e.preventDefault(); void ask(text); }} className="ai-glow flex items-end gap-2 rounded-3xl p-2 pl-5">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(text); } }} rows={1} maxLength={1500} placeholder={listening ? t.listening : t.placeholder} className="max-h-40 min-h-12 flex-1 resize-none bg-transparent py-3 text-base outline-none" />
+          <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(text); } }} rows={1} maxLength={1500} placeholder={listening ? t.listening : t.placeholder} className="no-scrollbar max-h-40 min-h-12 flex-1 resize-none bg-transparent py-3 text-base outline-none [field-sizing:content]" />
           <button type="button" onClick={listen} title={t.mic} className={cn('grid size-11 shrink-0 place-items-center rounded-full border border-border-strong hover:bg-surface-2', listening && 'animate-pulse border-danger text-danger')}><Mic className="size-4" /></button>
           <button type="submit" disabled={busy || !text.trim()} className="grid size-11 shrink-0 place-items-center rounded-full bg-ionian-900 text-limestone-50 transition-transform hover:-translate-y-0.5 disabled:opacity-40">{busy ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}</button>
         </form>

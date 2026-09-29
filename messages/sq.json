@@ -96,7 +96,10 @@
       "morning": "Mirëmëngjes",
       "afternoon": "Mirëdita",
       "evening": "Mirëmbrëma"
-    }
+    },
+    "more": "Më shumë",
+    "haptics": "Dridhje në prekje",
+    "pullRefresh": "Tërhiq për ta rifreskuar"
   },
   "command": {
     "title": "Pyet hotelin",

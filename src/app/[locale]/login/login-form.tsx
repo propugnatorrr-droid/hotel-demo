@@ -2,11 +2,12 @@
 
 import { Loader2, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { DEMO_ROLES, type DemoRole } from '@/config/demo';
+import { haptic } from '@/lib/haptics';
 import { signIn, signInDemo, type AuthError, type AuthState } from '@/server/actions/auth';
 
 type Props = { next?: string; initialError?: AuthError; demoEnabled: boolean };
@@ -38,6 +39,9 @@ export function LoginForm({ next, initialError, demoEnabled }: Props) {
   const [state, action] = useActionState<AuthState, FormData>(signIn, { error: initialError });
   const [demoState, demoAction] = useActionState<AuthState, FormData>(signInDemo, {});
   const error = demoState.error ?? state.error;
+  useEffect(() => {
+    if (error) haptic('error');
+  }, [error]);
 
   return (
     <div className="animate-fade-up mt-10 [animation-delay:120ms]">

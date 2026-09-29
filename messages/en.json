@@ -96,7 +96,10 @@
       "morning": "Good morning",
       "afternoon": "Good afternoon",
       "evening": "Good evening"
-    }
+    },
+    "more": "More",
+    "haptics": "Vibration feedback",
+    "pullRefresh": "Pull to refresh"
   },
   "command": {
     "title": "Ask your hotel",

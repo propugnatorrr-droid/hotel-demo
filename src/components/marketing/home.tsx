@@ -1,12 +1,16 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { useRef, useState } from 'react';
-import { motion, useMotionValueEvent, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowUpRight, Banknote, CalendarRange, Camera, Check, ChevronDown, Inbox, Network, PhoneCall, QrCode, ShieldAlert, Sparkles, Wine } from 'lucide-react';
 import { ADDONS, FOUNDING_HOTELS, foundingPrice, PLAN_PRICE_EUR, type SizeKey } from '@/config/plans';
 import { SeaHero } from '@/components/resort/sea-art';
 import { AskDemo, FEATURE_PHOTOS, FeatureCard, HOW_PHOTOS, InboxDemo, Interlude, LiveBrief, LiveCalendar, LiveChat, Odometer, Photo, RevealLine } from './live';
+import { Ambient } from './ambient';
+import { PropertyCards } from './property-page';
+import { SHARED } from './property-copy';
+import { SiteHeader } from './site-header';
 import { cn } from '@/lib/utils';
 import { pickMarketingCopy } from './copy';
 
@@ -21,22 +25,11 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const [open, setOpen] = useState<number | null>(0);
   const [size, setSize] = useState<SizeKey>('small');
-  const other = locale === 'en' ? '/' : '/en';
-  const { scrollYProgress: pageProgress, scrollY: pageY } = useScroll();
-  const [solid, setSolid] = useState(false);
-  useMotionValueEvent(pageY, 'change', (v) => { setSolid(v > 60); });
 
   return (
     <div className="bg-limestone-50 text-ionian-950" data-theme="day">
-      <motion.div style={{ scaleX: pageProgress, transformOrigin: '0 50%' }} className="fixed inset-x-0 top-0 z-50 h-0.5 bg-gold-400" />
-      <header className={cn('fixed inset-x-0 top-0 z-40 flex items-center justify-between px-5 py-4 text-limestone-50 transition-[background-color,backdrop-filter,padding] duration-500 md:px-10', solid && 'bg-ionian-950/80 py-3 backdrop-blur-xl')}>
-        <Link href="/" className="font-display text-2xl drop-shadow">Iliria</Link>
-        <nav className="hidden items-center gap-7 text-sm md:flex">
-          {(['features', 'how', 'pricing', 'faq'] as const).map((k) => <a key={k} href={`#${k}`} className="opacity-80 drop-shadow hover:opacity-100">{t.nav[k]}</a>)}
-          <Link href={other} className="rounded-full border border-white/30 px-3 py-1 text-xs uppercase">{locale === 'en' ? 'SQ' : 'EN'}</Link>
-        </nav>
-        <Link href="/app" className="rounded-full bg-gold-400 px-5 py-2 text-sm font-semibold text-ionian-950 shadow-lg transition-transform hover:-translate-y-0.5">{t.nav.demo}</Link>
-      </header>
+      <Ambient />
+      <SiteHeader locale={locale} />
 
       {/* hero */}
       <div ref={hero} className="relative min-h-[100svh] overflow-hidden bg-ionian-950 text-limestone-50">
@@ -102,7 +95,7 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
           {t.features.items.map((f, i) => {
             const Icon = ICONS[f.key as keyof typeof ICONS];
             return (
-              <FeatureCard key={f.key} index={i} big={'big' in f && !!f.big} photo={FEATURE_PHOTOS[f.key] ?? '/images/marketing/exterior-day.jpg'} icon={<Icon className="size-5" strokeWidth={1.5} />} title={f.title} text={f.text}>
+              <FeatureCard key={f.key} k={f.key} locale={locale} index={i} big={'big' in f && !!f.big} photo={FEATURE_PHOTOS[f.key] ?? '/images/marketing/exterior-day.jpg'} icon={<Icon className="size-5" strokeWidth={1.5} />} title={f.title} text={f.text}>
                 {f.key === 'ask' && <AskDemo locale={locale} />}
                 {f.key === 'inbox' && <InboxDemo locale={locale} />}
               </FeatureCard>
@@ -131,6 +124,16 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
             ))}
           </div>
         </div>
+      </section>
+
+      {/* property types */}
+      <section id="types" className="mx-auto max-w-6xl px-6 py-24 md:px-10 md:py-32">
+        <motion.div {...reveal} className="max-w-2xl">
+          <p className="text-xs tracking-[0.3em] text-accent uppercase">{SHARED[locale === 'en' ? 'en' : 'sq'].types.eyebrow}</p>
+          <h2 className="font-display mt-4 text-5xl md:text-7xl">{SHARED[locale === 'en' ? 'en' : 'sq'].types.title}</h2>
+          <p className="mt-4 text-lg text-limestone-700">{SHARED[locale === 'en' ? 'en' : 'sq'].types.sub}</p>
+        </motion.div>
+        <PropertyCards locale={locale} className="mt-12" />
       </section>
 
       <Interlude locale={locale} />
