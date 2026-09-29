@@ -269,9 +269,16 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHero eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} />
+      {turns.length === 0 ? (
+        <PageHero eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} />
+      ) : (
+        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 border-b border-border pb-5">
+          <span className="ai-glow grid size-10 place-items-center rounded-full"><Sparkles className="size-4 text-accent" /></span>
+          <div><p className="text-[11px] tracking-[0.25em] text-accent uppercase">{t.eyebrow}</p><p className="font-display text-2xl">{t.title}</p></div>
+        </motion.header>
+      )}
 
-      <div className="mt-8 space-y-10">
+      <div className="mt-8 space-y-10 pb-44">
         {turns.length === 0 && (
           <div className="flex flex-wrap gap-3">
             {t.suggestions.map((s, i) => (
@@ -301,7 +308,7 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
         <div ref={end} />
       </div>
 
-      <div className="sticky bottom-4 mt-10">
+      <div className="sticky bottom-0 z-20 -mx-5 mt-4 bg-gradient-to-t from-background from-70% to-transparent px-5 pt-10 pb-5 md:-mx-14 md:px-14">
         <form onSubmit={(e) => { e.preventDefault(); void ask(text); }} className="ai-glow flex items-end gap-2 rounded-3xl p-2 pl-5 shadow-float">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(text); } }} rows={1} maxLength={1500} placeholder={listening ? t.listening : t.placeholder} className="max-h-40 min-h-12 flex-1 resize-none bg-transparent py-3 text-base outline-none" />
           <button type="button" onClick={listen} title={t.mic} className={cn('grid size-11 shrink-0 place-items-center rounded-full border border-border-strong hover:bg-surface-2', listening && 'animate-pulse border-danger text-danger')}><Mic className="size-4" /></button>
