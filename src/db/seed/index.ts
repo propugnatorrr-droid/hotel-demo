@@ -1,4 +1,5 @@
 import './env';
+import { createHash } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { eq, type InferInsertModel } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
@@ -27,7 +28,11 @@ async function insertMany<T extends PgTable>(table: T, rows: Insert<T>[]) {
   }
 }
 
-async function ensureUser(sb: SupabaseClient, email: string, fullName: string, password: string) {
+async function ensureUser(sb: SupabaseClient | null, email: string, fullName: string, password: string) {
+  if (!sb) {
+    const h = createHash('md5').update(email).digest('hex');
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+  }
   const created = await sb.auth.admin.createUser({
     email,
     password,
@@ -49,14 +54,16 @@ async function ensureUser(sb: SupabaseClient, email: string, fullName: string, p
   throw created.error ?? new Error(`Could not create user ${email}`);
 }
 
-async function main() {
+export async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const password = process.env.DEMO_PASSWORD;
-  if (!url || !serviceKey) throw new Error('Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local');
+  // SEED_OFFLINE=1: no Supabase Auth (used by the local smoke test against an in-memory Postgres).
+  const offline = process.env.SEED_OFFLINE === '1';
+  if (!offline && (!url || !serviceKey)) throw new Error('Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local');
   if (!password || password.length < 8) throw new Error('Set DEMO_PASSWORD (min 8 characters) in .env.local');
 
-  const sb = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const sb = offline ? null : createClient(url!, serviceKey!, { auth: { persistSession: false, autoRefreshToken: false } });
   const today = todayInTirana();
   const yesterday = addDays(today, -1);
   const year = today.slice(0, 4);
@@ -578,9 +585,11 @@ async function main() {
   for (const u of D.USERS) console.log(`  ${u.role ?? 'super-admin'}: ${u.email}`);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+if (!process.env.SEED_NO_AUTORUN) {
+  main()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

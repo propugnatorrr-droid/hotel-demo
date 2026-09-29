@@ -47,7 +47,10 @@ export async function run<T>(fn: () => Promise<T>, mutate = true): Promise<Actio
     const code = pgCode(error);
     if (code === '23P01') return { ok: false, error: 'roomTaken' };
     if (code === '23505') return { ok: false, error: 'duplicate' };
-    if (code === '23514' || code === '22P02') return { ok: false, error: 'invalid' };
+    if (code === '23514' || code === '22P02') {
+      console.error('[action:invalid]', code, error);
+      return { ok: false, error: 'invalid' };
+    }
     console.error('[action]', error);
     return { ok: false, error: 'unknown' };
   }
