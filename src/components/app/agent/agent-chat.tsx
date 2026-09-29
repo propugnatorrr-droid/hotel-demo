@@ -162,8 +162,12 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
       /* ignore */
     }
   }, []);
-  const scroll = useCallback(() => end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), []);
-  useEffect(scroll, [turns, scroll]);
+  const scroll = useCallback(() => {
+    end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, []);
+  useEffect(() => {
+    scroll();
+  }, [turns, scroll]);
 
   const patchAgent = (id: number, fn: (t: Turn) => Turn) => setTurns((all) => all.map((x) => (x.id === id ? fn(x) : x)));
 
