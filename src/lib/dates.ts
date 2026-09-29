@@ -40,3 +40,22 @@ export function relativeTime(date: Date, locale: string, now: Date = new Date())
 export function capitalize(s: string): string {
   return s.charAt(0).toLocaleUpperCase() + s.slice(1);
 }
+
+function tzOffsetMs(ts: number, tz: string) {
+  const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date(ts));
+  const g = (t: string) => Number(p.find((x) => x.type === t)?.value);
+  return Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute'), g('second')) - Math.floor(ts / 1000) * 1000;
+}
+
+/** Wall-clock date + "HH:mm" in a timezone → UTC Date. */
+export function zonedToUtc(date: string, time: string, tz: string): Date {
+  const [y, mo, d] = date.split('-').map(Number) as [number, number, number];
+  const [h, m] = time.split(':').map(Number) as [number, number];
+  const guess = Date.UTC(y, mo - 1, d, h, m);
+  return new Date(guess - tzOffsetMs(guess, tz));
+}
+
+/** "HH:mm" of a Date in a timezone. */
+export function timeIn(tz: string, d: Date): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
+}
