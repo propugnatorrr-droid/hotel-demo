@@ -23,8 +23,8 @@ export type ToolHandler = (args: Record<string, unknown>) => Promise<unknown> | 
 export type AgentTool = ToolDef & { run: ToolHandler };
 
 export const aiConfigured = () => Boolean(process.env.OPENROUTER_API_KEY);
-export const textModel = () => process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4-flash';
-export const visionModel = () => process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-flash';
+export const textModel = () => process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4.1-flash';
+export const visionModel = () => process.env.OPENROUTER_VISION_MODEL || 'qwen/qwen3.7-flash';
 
 export class AiUnavailable extends Error {}
 

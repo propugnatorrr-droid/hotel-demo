@@ -30,7 +30,7 @@ export async function getVoice(ctx: OrgContext, locale: 'sq' | 'en') {
       voice: { provider: 'azure', voiceId: sq ? 'sq-AL-AnilaNeural' : 'en-GB-SoniaNeural' },
       model: {
         provider: 'openrouter',
-        model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4-flash',
+        model: process.env.OPENROUTER_MODEL || 'deepseek/deepseek-v4.1-flash',
         messages: [{
           role: 'system',
           content: [

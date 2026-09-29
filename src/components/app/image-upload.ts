@@ -1,7 +1,7 @@
 'use client';
 
-/** Downscales a photo to a JPEG data URL (max 1600px) so uploads stay small and fast on mobile. */
-export async function compressImage(file: File, max = 1600, quality = 0.82): Promise<string> {
+/** Downscales a photo to a JPEG data URL (max 1280px; fewer pixels = fewer vision tokens = cheaper, still sharp enough for printed text) so uploads stay small and fast on mobile. */
+export async function compressImage(file: File, max = 1280, quality = 0.72): Promise<string> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement('canvas');
