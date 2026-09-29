@@ -37,7 +37,7 @@ const sq = {
   sections: { guest: 'Mysafiri', stay: 'Qëndrimi', money: 'Llogaria', folio: 'Fatura e dhomës', payments: 'Pagesat', timeline: 'Historiku' },
   timeline: {
     'booking.created': 'Rezervimi u krijua', 'booking.confirmed': 'U konfirmua', 'booking.room_assigned': 'U caktua dhoma',
-    'booking.room_unassigned': 'U hoq dhoma', 'booking.upgraded': 'U përmirësua dhoma', 'booking.checked_in': 'Hyri',
+    'booking.room_unassigned': 'U hoq dhoma', 'booking.upgraded': 'U përmirësua dhoma', 'booking.moved': 'U zhvendos në kalendar', 'booking.checked_in': 'Hyri',
     'booking.checked_out': 'Doli', 'booking.cancelled': 'U anulua', 'booking.no_show': 'Nuk erdhi',
     'payment.recorded': 'Pagesë', 'payment.refunded': 'Rimbursim', 'folio.charge_posted': 'Shpenzim i shtuar', 'folio.charge_voided': 'Shpenzim i anuluar',
   } as Record<string, string>,
@@ -93,7 +93,7 @@ const en: typeof sq = {
   sections: { guest: 'Guest', stay: 'Stay', money: 'Account', folio: 'Folio', payments: 'Payments', timeline: 'Timeline' },
   timeline: {
     'booking.created': 'Booking created', 'booking.confirmed': 'Confirmed', 'booking.room_assigned': 'Room assigned',
-    'booking.room_unassigned': 'Room unassigned', 'booking.upgraded': 'Upgraded', 'booking.checked_in': 'Checked in',
+    'booking.room_unassigned': 'Room unassigned', 'booking.upgraded': 'Upgraded', 'booking.moved': 'Moved on calendar', 'booking.checked_in': 'Checked in',
     'booking.checked_out': 'Checked out', 'booking.cancelled': 'Cancelled', 'booking.no_show': 'No-show',
     'payment.recorded': 'Payment', 'payment.refunded': 'Refund', 'folio.charge_posted': 'Charge posted', 'folio.charge_voided': 'Charge voided',
   },
