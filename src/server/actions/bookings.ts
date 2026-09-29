@@ -9,6 +9,7 @@ import { auditLogs, bookings, folioItems, folios, guests, housekeepingTasks, pay
 import { requireOrg } from '@/lib/auth/session';
 import { todayIn } from '@/lib/dates';
 import { findFreeRooms, lockInventory, quoteStay, roomIsFree, type Quote } from '@/server/services/stay';
+import { queueChannelPush } from '@/server/services/channel-sync';
 
 export type ActionResult<T = null> = { ok: true; data: T } | { ok: false; error: string };
 
