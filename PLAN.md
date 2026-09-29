@@ -594,3 +594,14 @@ only a bounded, hotel-scoped set of operations data. Its sole mutation path is
 a displayed proposal that a human confirms through the same validated Server
 Action used by the manual UI. Guest-facing AI is a separate security boundary
 and is not implemented by this staff endpoint.
+- [x] Batch 6: bookings workspace (arrivals / in-house / departures / upcoming /
+  all with live counts), nightly quote engine (daily_rates → base price
+  fallback, closed dates, min stay, max occupancy, peak-night availability),
+  guest dedupe by email/phone, auto room assignment, confirm / check-in /
+  check-out / cancel / no-show, room moves and manager upgrades, payments and
+  refunds, folio charges with reversal-only voids, checkout → dirty room +
+  urgent clean when same-day arrival, per-booking timeline from audit_logs,
+  guest directory with lifetime value and history, read-only booking tools in
+  staff AI. Double booking prevented by advisory lock per room type plus the
+  DB exclusion constraint in supabase/sql/06.
+- [ ] Batch 7: calendar/tape chart with drag-to-move using assignRoom.
