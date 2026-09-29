@@ -39,8 +39,7 @@ const sq = {
     'booking.created': 'Rezervimi u krijua', 'booking.confirmed': 'U konfirmua', 'booking.room_assigned': 'U caktua dhoma',
     'booking.room_unassigned': 'U hoq dhoma', 'booking.upgraded': 'U përmirësua dhoma', 'booking.checked_in': 'Hyri',
     'booking.checked_out': 'Doli', 'booking.cancelled': 'U anulua', 'booking.no_show': 'Nuk erdhi',
-    'payment.recorded': 'Pagesë', 'payment.refunded': 'Rimbursim', 'folio.charge_posted': 'Shpenzim i shtuar', 'folio.charge_voided': 'Shpenzim i anuluar',
-  } as Record<string, string>,
+'payment.recorded': 'Pagesë', 'payment.refunded': 'Rimbursim', 'folio.charge_posted': 'Shpenzim i shtuar', 'folio.charge_voided': 'Shpenzim i anuluar', 'booking.stay_changed': 'U ndryshua qëndrimi',  } as Record<string, string>,
   errors: {
     invalid: 'Kontrollo fushat.', forbidden: 'Kjo kërkon leje menaxheri.', module: 'Moduli është i çaktivizuar.', unknown: 'Diçka shkoi keq. Provo përsëri.',
     notFound: 'Rezervimi nuk u gjet.', nights: 'Qëndrimi duhet të jetë 1–60 net.', type: 'Lloji i dhomës nuk është aktiv.',
@@ -95,8 +94,7 @@ const en: typeof sq = {
     'booking.created': 'Booking created', 'booking.confirmed': 'Confirmed', 'booking.room_assigned': 'Room assigned',
     'booking.room_unassigned': 'Room unassigned', 'booking.upgraded': 'Upgraded', 'booking.checked_in': 'Checked in',
     'booking.checked_out': 'Checked out', 'booking.cancelled': 'Cancelled', 'booking.no_show': 'No-show',
-    'payment.recorded': 'Payment', 'payment.refunded': 'Refund', 'folio.charge_posted': 'Charge posted', 'folio.charge_voided': 'Charge voided',
-  },
+'payment.recorded': 'Payment', 'payment.refunded': 'Refund', 'folio.charge_posted': 'Charge posted', 'folio.charge_voided': 'Charge voided', 'booking.stay_changed': 'Stay changed',  },
   errors: {
     invalid: 'Please check the fields.', forbidden: 'This needs manager permission.', module: 'Module disabled.', unknown: 'Something went wrong. Try again.',
     notFound: 'Booking not found.', nights: 'Stay must be 1–60 nights.', type: 'Room type is not active.',
