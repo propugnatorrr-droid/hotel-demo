@@ -611,4 +611,11 @@ and is not implemented by this staff endpoint.
   manager-only keep when nights change, OTA warning), per-type availability + price row,
   manager bulk rates editor (price / min stay / open-closed, weekday filter, upsert),
   Supabase Realtime refresh (bookings, rooms, daily_rates) with landing pulse.
-- [ ] Batch 8: integration layer + channel adapter (push rates from updateRates).
+- [x] Batch 8: channel manager. Adapter layer (mock | Channex sandbox/live), delta-hashed
+  ARI push (availability + rate/min-stay/stop-sell ranges, 365 days) after every booking,
+  calendar and rates change; Channex revision feed ingest (new/modified/cancelled, multi-room,
+  guest dedupe, auto room, OTA-prepaid payments, idempotent by revision id, ack after commit);
+  overbooking → critical alert with free-upgrade suggestion; webhook + daily cron safety net;
+  /app/channels: live activity, commission insight, connection + room mapping, demo
+  "simulate OTA booking". Table channel_events (supabase/sql/08).
+- [ ] Batch 9: next module per §14.
