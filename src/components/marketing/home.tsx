@@ -1,64 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
-import { animate, motion, useInView, useScroll, useTransform } from 'motion/react';
-import { ArrowUpRight, Banknote, Bot, CalendarRange, Camera, Check, ChevronDown, Inbox, Network, PhoneCall, QrCode, ShieldAlert, Sparkles, Wine } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { motion, useMotionValueEvent, useScroll, useTransform } from 'motion/react';
+import { ArrowUpRight, Banknote, CalendarRange, Camera, Check, ChevronDown, Inbox, Network, PhoneCall, QrCode, ShieldAlert, Sparkles, Wine } from 'lucide-react';
 import { ADDONS, FOUNDING_HOTELS, foundingPrice, PLAN_PRICE_EUR, type SizeKey } from '@/config/plans';
 import { SeaHero } from '@/components/resort/sea-art';
+import { AskDemo, FEATURE_PHOTOS, FeatureCard, HOW_PHOTOS, InboxDemo, Interlude, LiveBrief, LiveCalendar, LiveChat, Odometer, Photo, RevealLine } from './live';
 import { cn } from '@/lib/utils';
 import { pickMarketingCopy } from './copy';
 
 const reveal = { initial: { opacity: 0, y: 30 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: '-80px' }, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] as const } };
 const ICONS = { ask: Sparkles, calendar: CalendarRange, channels: Network, inbox: Inbox, pos: Wine, fiscal: QrCode, ocr: Camera, voice: PhoneCall, alerts: ShieldAlert } as const;
-
-function Counter({ value, suffix }: { value: number; suffix: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  useEffect(() => {
-    if (!inView || !ref.current) return;
-    const el = ref.current;
-    const c = animate(0, value, { duration: 1.6, ease: [0.16, 1, 0.3, 1], onUpdate: (v) => (el.textContent = `${Math.round(v)}${suffix}`) });
-    return () => c.stop();
-  }, [inView, value, suffix]);
-  return <span ref={ref}>0{suffix}</span>;
-}
-
-/** Types a string out once visible. */
-function Typed({ text, speed = 22, className }: { text: string; speed?: number; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true });
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    const i = window.setInterval(() => setN((x) => (x >= text.length ? x : x + 1)), speed);
-    return () => window.clearInterval(i);
-  }, [inView, text, speed]);
-  return <span ref={ref} className={className}>{text.slice(0, n)}<span className="ml-0.5 inline-block h-[1em] w-px animate-pulse bg-current align-middle" /></span>;
-}
-
-function MiniCalendar({ label }: { label: string }) {
-  const rows = [
-    [{ s: 0, w: 3, c: 'var(--color-ch-booking)', n: 'Marco R.' }, { s: 4, w: 2, c: 'var(--color-ch-direct)', n: 'Elira K.' }],
-    [{ s: 1, w: 4, c: 'var(--color-ch-airbnb)', n: 'Jonas W.' }],
-    [{ s: 0, w: 2, c: 'var(--color-ch-whatsapp)', n: 'Blerim K.' }, { s: 3, w: 3, c: 'var(--color-ch-booking)', n: 'Sofia G.' }],
-  ];
-  return (
-    <div>
-      <p className="text-xs tracking-wider text-ionian-200 uppercase">{label}</p>
-      <div className="mt-4 space-y-2">
-        {rows.map((r, i) => (
-          <div key={i} className="relative h-8 rounded-md bg-white/5">
-            {r.map((b, j) => (
-              <motion.div key={j} initial={{ scaleX: 0, opacity: 0 }} whileInView={{ scaleX: 1, opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.15 + j * 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }} style={{ left: `${(b.s / 6) * 100}%`, width: `${(b.w / 6) * 100 - 1}%`, background: b.c, originX: 0 }} className="absolute inset-y-1 flex items-center rounded px-2 text-[10px] font-medium text-white">{b.n}</motion.div>
-            ))}
-          </div>
-        ))}
-      </div>
-      <motion.div animate={{ x: [0, 46, 46, 0], y: [0, 0, 40, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="pointer-events-none relative -mt-14 ml-16 size-5 rounded-full border-2 border-gold-400 bg-gold-400/30" />
-    </div>
-  );
-}
 
 export function MarketingHome({ locale, whatsapp, email }: { locale: string; whatsapp: string | null; email: string }) {
   const t = pickMarketingCopy(locale);
@@ -69,12 +22,14 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
   const [open, setOpen] = useState<number | null>(0);
   const [size, setSize] = useState<SizeKey>('small');
   const other = locale === 'en' ? '/' : '/en';
-  const { scrollYProgress: pageProgress } = useScroll();
+  const { scrollYProgress: pageProgress, scrollY: pageY } = useScroll();
+  const [solid, setSolid] = useState(false);
+  useMotionValueEvent(pageY, 'change', (v) => { setSolid(v > 60); });
 
   return (
     <div className="bg-limestone-50 text-ionian-950" data-theme="day">
       <motion.div style={{ scaleX: pageProgress, transformOrigin: '0 50%' }} className="fixed inset-x-0 top-0 z-50 h-0.5 bg-gold-400" />
-      <header className="fixed inset-x-0 top-0 z-40 flex items-center justify-between px-5 py-4 text-limestone-50 md:px-10">
+      <header className={cn('fixed inset-x-0 top-0 z-40 flex items-center justify-between px-5 py-4 text-limestone-50 transition-[background-color,backdrop-filter,padding] duration-500 md:px-10', solid && 'bg-ionian-950/80 py-3 backdrop-blur-xl')}>
         <Link href="/" className="font-display text-2xl drop-shadow">Iliria</Link>
         <nav className="hidden items-center gap-7 text-sm md:flex">
           {(['features', 'how', 'pricing', 'faq'] as const).map((k) => <a key={k} href={`#${k}`} className="opacity-80 drop-shadow hover:opacity-100">{t.nav[k]}</a>)}
@@ -85,14 +40,18 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
 
       {/* hero */}
       <div ref={hero} className="relative min-h-[100svh] overflow-hidden bg-ionian-950 text-limestone-50">
-        <motion.div style={{ y }} className="absolute inset-[-6%]"><SeaHero className="size-full" /></motion.div>
-        <div className="absolute inset-0 bg-gradient-to-b from-ionian-950/60 via-ionian-950/10 to-ionian-950" />
+        <motion.div style={{ y }} className="absolute inset-[-6%]">
+          <SeaHero className="size-full" />
+          <Photo src="/images/marketing/hero.jpg" alt="" priority className="animate-kenburns absolute inset-0" />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-ionian-950/70 via-ionian-950/20 to-ionian-950" />
+        <div className="absolute inset-0 bg-gradient-to-r from-ionian-950/60 via-transparent to-transparent" />
         <div className="bg-qilim pointer-events-none absolute inset-0 opacity-30" />
         <motion.div style={{ opacity: fade }} className="relative z-10 mx-auto flex min-h-[100svh] max-w-6xl flex-col justify-center px-6 pt-28 pb-16 md:px-10">
           <motion.p initial={{ opacity: 0, letterSpacing: '0.1em' }} animate={{ opacity: 1, letterSpacing: '0.3em' }} transition={{ duration: 1.3 }} className="text-[11px] text-gold-400 uppercase md:text-xs">{t.hero.eyebrow}</motion.p>
           <h1 className="font-display mt-6 text-6xl leading-[0.92] tracking-tight sm:text-7xl md:text-[7rem]">
             {t.hero.title.map((line, i) => (
-              <motion.span key={i} initial={{ opacity: 0, y: 60, filter: 'blur(12px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} transition={{ delay: 0.2 + i * 0.18, duration: 1.1, ease: [0.16, 1, 0.3, 1] }} className={cn('block', i === 2 && 'text-shimmer italic')}>{line}</motion.span>
+              <RevealLine key={i} delay={0.25 + i * 0.14} className={cn(i === 2 && 'text-shimmer italic')}>{line}</RevealLine>
             ))}
           </h1>
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 1 }} className="mt-8 max-w-xl text-base text-ionian-100 md:text-lg">{t.hero.sub}</motion.p>
@@ -102,16 +61,10 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
           </motion.div>
           <p className="mt-4 text-xs text-ionian-200/80">{t.hero.note}</p>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            <motion.div {...reveal} className="rounded-2xl border border-white/15 bg-white/8 p-5 backdrop-blur-xl">
-              <p className="flex items-center gap-1.5 text-xs tracking-wider text-gold-400 uppercase"><Sparkles className="size-3.5" />{t.cards.brief.title}</p>
-              <p className="font-serif mt-4 text-xl leading-relaxed"><Typed text={t.cards.brief.text} /></p>
-            </motion.div>
-            <motion.div {...reveal} transition={{ ...reveal.transition, delay: 0.1 }} className="space-y-2 rounded-2xl border border-white/15 bg-white/8 p-5 backdrop-blur-xl">
-              <p className="ml-auto w-fit max-w-[90%] rounded-2xl rounded-br-md bg-white/15 px-3.5 py-2 text-sm">{t.cards.chat.guest}</p>
-              <p className="ai-glow w-fit max-w-[90%] rounded-2xl rounded-bl-md px-3.5 py-2 text-sm text-ionian-950"><Bot className="mr-1 inline size-3.5 text-accent" /><Typed text={t.cards.chat.ai} speed={28} /></p>
-            </motion.div>
-            <motion.div {...reveal} transition={{ ...reveal.transition, delay: 0.2 }} className="rounded-2xl border border-white/15 bg-white/8 p-5 backdrop-blur-xl"><MiniCalendar label={t.cards.calendar} /></motion.div>
+          <div className="mt-16 grid gap-5 md:grid-cols-3">
+            <LiveBrief title={t.cards.brief.title} text={t.cards.brief.text} />
+            <LiveChat guest={t.cards.chat.guest} ai={t.cards.chat.ai} locale={locale} />
+            <LiveCalendar label={t.cards.calendar} locale={locale} />
           </div>
         </motion.div>
       </div>
@@ -132,7 +85,7 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-14 md:grid-cols-4 md:px-10">
           {t.stats.map((s) => (
             <motion.div key={s.label} {...reveal}>
-              <p className="font-serif text-6xl tabular-nums text-ionian-800 md:text-7xl"><Counter value={s.value} suffix={s.suffix} /></p>
+              <p className="font-serif text-6xl tabular-nums text-ionian-800 md:text-7xl"><Odometer value={s.value} suffix={s.suffix} /></p>
               <p className="mt-2 text-sm text-limestone-700">{s.label}</p>
             </motion.div>
           ))}
@@ -149,12 +102,10 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
           {t.features.items.map((f, i) => {
             const Icon = ICONS[f.key as keyof typeof ICONS];
             return (
-              <motion.article key={f.key} {...reveal} transition={{ ...reveal.transition, delay: (i % 3) * 0.08 }} whileHover={{ y: -6 }} className={cn('group relative overflow-hidden rounded-3xl border border-limestone-200 bg-white p-7 shadow-soft transition-shadow hover:shadow-lift', 'big' in f && f.big && 'md:col-span-2 md:bg-ionian-950 md:text-limestone-50')}>
-                <div className={cn('grid size-12 place-items-center rounded-2xl bg-ionian-100 text-ionian-700 transition-transform group-hover:rotate-6 group-hover:scale-110', 'big' in f && f.big && 'md:bg-gold-400 md:text-ionian-950')}><Icon className="size-6" strokeWidth={1.5} /></div>
-                <h3 className="font-display mt-6 text-3xl md:text-4xl">{f.title}</h3>
-                <p className={cn('mt-3 max-w-lg text-sm leading-relaxed text-limestone-700', 'big' in f && f.big && 'md:text-ionian-200')}>{f.text}</p>
-                {'big' in f && f.big && <div className="bg-qilim pointer-events-none absolute inset-0 hidden opacity-25 md:block" />}
-              </motion.article>
+              <FeatureCard key={f.key} index={i} big={'big' in f && !!f.big} photo={FEATURE_PHOTOS[f.key] ?? '/images/marketing/exterior-day.jpg'} icon={<Icon className="size-5" strokeWidth={1.5} />} title={f.title} text={f.text}>
+                {f.key === 'ask' && <AskDemo locale={locale} />}
+                {f.key === 'inbox' && <InboxDemo locale={locale} />}
+              </FeatureCard>
             );
           })}
         </div>
@@ -169,7 +120,10 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
           </motion.div>
           <div className="mt-20 grid gap-8 md:grid-cols-3">
             {t.how.steps.map((s, i) => (
-              <motion.div key={s.n} {...reveal} transition={{ ...reveal.transition, delay: i * 0.12 }} className="rounded-3xl border border-white/10 bg-white/5 p-9">
+              <motion.div key={s.n} {...reveal} transition={{ ...reveal.transition, delay: i * 0.12 }} className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-9">
+                <div className="-mx-9 -mt-9 mb-8 aspect-[4/3] overflow-hidden">
+                  <Photo reveal src={HOW_PHOTOS[i] ?? '/images/marketing/exterior-day.jpg'} alt="" sizes="(min-width:768px) 33vw, 100vw" className="size-full transition-transform duration-[1600ms] group-hover:scale-105" />
+                </div>
                 <p className="font-serif text-7xl text-gold-400/90">{s.n}</p>
                 <h3 className="font-display mt-4 text-3xl">{s.title}</h3>
                 <p className="mt-3 text-sm leading-relaxed text-ionian-200">{s.text}</p>
@@ -178,6 +132,8 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
           </div>
         </div>
       </section>
+
+      <Interlude locale={locale} />
 
       {/* pricing */}
       <section id="pricing" className="mx-auto max-w-6xl px-6 py-24 md:px-10 md:py-32">
