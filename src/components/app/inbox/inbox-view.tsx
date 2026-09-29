@@ -155,7 +155,9 @@ function ThreadPane({ thread, locale, back }: { thread: Thread; locale: string; 
   const end = useRef<HTMLDivElement>(null);
   const first = thread.guest?.firstName ?? thread.contactName ?? '';
 
-  useEffect(() => end.current?.scrollIntoView({ block: 'end' }), [thread.messages.length]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: 'end' });
+  }, [thread.messages.length]);
   useEffect(() => {
     void setConversationState({ conversationId: thread.id, action: 'read' });
   }, [thread.id]);

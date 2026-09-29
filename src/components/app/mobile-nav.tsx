@@ -24,7 +24,9 @@ export function MobileNav({ navKeys, orgs, activeOrgId, simpleMode }: MobileNavP
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>

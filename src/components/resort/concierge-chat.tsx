@@ -34,7 +34,9 @@ export function ConciergeChat({ slug, locale, name }: { slug: string; locale: st
     }
   }, []);
 
-  useEffect(() => end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [msgs, busy, open]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [msgs, busy, open]);
 
   // Poll for staff replies while the panel is open.
   const poll = useCallback(async () => {

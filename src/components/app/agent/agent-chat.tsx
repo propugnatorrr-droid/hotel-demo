@@ -1,10 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUp, Check, CircleAlert, Loader2, Mic, Play, ShieldCheck, Sparkles, X, Zap } from 'lucide-react';
-import { PageHero } from '@/components/app/page-hero';
 import { cn } from '@/lib/utils';
 
 type Step = { id: string; label: string; state: 'running' | 'ok' | 'error'; write?: boolean; note?: string };
@@ -151,7 +150,6 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
   const [busy, setBusy] = useState(false);
   const [auto, setAuto] = useState(false);
   const [listening, setListening] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
   const nextId = useRef(1);
   const started = useRef(false);
 
@@ -162,8 +160,23 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
       /* ignore */
     }
   }, []);
+  const root = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState<number | null>(null);
+  // Fill exactly the space under the app chrome so only the message list scrolls (like a real chat app).
+  useLayoutEffect(() => {
+    const fit = () => {
+      const top = root.current?.getBoundingClientRect().top ?? 0;
+      setHeight(Math.max(420, window.innerHeight - top - 8));
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
   const scroll = useCallback(() => {
-    box.current?.scrollTo({ top: box.current.scrollHeight });
+    const el = box.current;
+    if (!el) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 480) el.scrollTo({ top: el.scrollHeight });
   }, []);
   useEffect(() => {
     scroll();
@@ -268,30 +281,41 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-15rem)] min-h-[30rem] max-w-3xl flex-col">
-      {turns.length === 0 ? (
-        <PageHero className="shrink-0 !py-10 md:!py-12" eyebrow={t.eyebrow} title={t.title} subtitle={t.subtitle} />
-      ) : (
+    <div ref={root} style={{ height: height ?? undefined, minHeight: height ? undefined : 'calc(100dvh - 9rem)' }} className="mx-auto -mt-3 mb-[-2.24rem] flex max-w-4xl flex-col md:-mt-8 md:mb-[-4.48rem]">
+      {turns.length > 0 && (
         <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 items-center gap-3 border-b border-border pb-4">
           <span className="ai-glow grid size-10 place-items-center rounded-full"><Sparkles className="size-4 text-accent" /></span>
           <div><p className="text-[11px] tracking-[0.25em] text-accent uppercase">{t.eyebrow}</p><p className="font-display text-2xl">{t.title}</p></div>
         </motion.header>
       )}
 
-      <div ref={box} className="mt-4 min-h-0 flex-1 space-y-8 overflow-y-auto py-4 pr-2">
+      <div ref={box} className="no-scrollbar min-h-0 flex-1 space-y-9 overflow-y-auto scroll-smooth pt-4 pb-8">
         {turns.length === 0 && (
-          <div className="flex flex-wrap gap-3">
+          <>
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="pt-4 text-center md:pt-10">
+          <div className="relative mx-auto size-16">
+            <motion.span className="absolute inset-0 rounded-full bg-gradient-to-tr from-gold-400 via-terracotta-400 to-ionian-400 blur-xl" animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.75, 0.4] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }} />
+            <span className="ai-glow absolute inset-1 grid place-items-center rounded-full"><Sparkles className="size-6 text-accent" /></span>
+          </div>
+          <p className="mt-5 text-[11px] tracking-[0.3em] text-accent uppercase">{t.eyebrow}</p>
+          <h1 className="font-display mt-3 text-4xl md:text-6xl">{t.title}</h1>
+          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted">{t.subtitle}</p>
+        </motion.div>
+          <div className="grid gap-3 sm:grid-cols-2">
             {t.suggestions.map((s, i) => (
-              <motion.button key={s} type="button" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.07 }} whileHover={{ y: -3 }} onClick={() => void ask(s)} className="rounded-2xl border border-border bg-surface px-4 py-3 text-left text-sm text-muted shadow-soft hover:border-border-strong hover:text-foreground">{s}</motion.button>
+              <motion.button key={s} type="button" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 + i * 0.07 }} whileHover={{ y: -3 }} onClick={() => void ask(s)} className="group flex items-start gap-3 rounded-2xl border border-border bg-surface px-4 py-4 text-left text-sm text-muted shadow-soft transition-colors hover:border-accent/50 hover:text-foreground"><Sparkles className="mt-0.5 size-4 shrink-0 text-accent opacity-60 transition-opacity group-hover:opacity-100" /><span>{s}</span></motion.button>
             ))}
           </div>
+          </>
         )}
 
         {turns.map((turn) =>
           turn.role === 'user' ? (
-            <motion.div key={turn.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end"><p className="max-w-[85%] rounded-3xl rounded-br-lg bg-ionian-900 px-5 py-3 text-[15px] text-limestone-50">{turn.text}</p></motion.div>
+            <motion.div key={turn.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end"><p className="max-w-[80%] rounded-3xl rounded-br-lg bg-ionian-900 px-5 py-3.5 text-[15.5px] leading-relaxed text-limestone-50">{turn.text}</p></motion.div>
           ) : (
-            <motion.div key={turn.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <motion.div key={turn.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex gap-4">
+              <span className="ai-glow mt-0.5 grid size-9 shrink-0 place-items-center rounded-full"><Sparkles className="size-4 text-accent" /></span>
+              <div className="min-w-0 flex-1 space-y-4">
               {turn.steps.length > 0 && <ul className="space-y-2 border-l-2 border-border pl-4"><AnimatePresence initial={false}>{turn.steps.map((s) => <StepRow key={s.id} s={s} />)}</AnimatePresence></ul>}
               {turn.proposals.length > 0 && (
                 <div className="space-y-2.5">
@@ -300,14 +324,15 @@ export function AgentChat({ locale, initialQuestion }: { locale: string; initial
                 </div>
               )}
               {turn.thinking && !turn.answer && <Orb phrases={t.thinking} />}
-              {turn.answer && <p className="text-[15.5px] leading-relaxed whitespace-pre-wrap"><Typewriter text={turn.answer} onTick={scroll} /></p>}
+              {turn.answer && <p className="text-base leading-[1.75] whitespace-pre-wrap"><Typewriter text={turn.answer} onTick={scroll} /></p>}
               {turn.error && <p className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{turn.error}</p>}
+              </div>
             </motion.div>
           ),
         )}
       </div>
 
-      <div className="shrink-0 border-t border-border bg-background pt-4">
+      <div className="relative shrink-0 bg-background pt-3 pb-4 before:pointer-events-none before:absolute before:inset-x-0 before:-top-8 before:h-8 before:bg-gradient-to-t before:from-background before:to-transparent">
         <form onSubmit={(e) => { e.preventDefault(); void ask(text); }} className="ai-glow flex items-end gap-2 rounded-3xl p-2 pl-5">
           <textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void ask(text); } }} rows={1} maxLength={1500} placeholder={listening ? t.listening : t.placeholder} className="max-h-40 min-h-12 flex-1 resize-none bg-transparent py-3 text-base outline-none" />
           <button type="button" onClick={listen} title={t.mic} className={cn('grid size-11 shrink-0 place-items-center rounded-full border border-border-strong hover:bg-surface-2', listening && 'animate-pulse border-danger text-danger')}><Mic className="size-4" /></button>

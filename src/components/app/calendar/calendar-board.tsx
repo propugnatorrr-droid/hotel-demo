@@ -68,7 +68,9 @@ export function CalendarBoard({
     window.setTimeout(() => setToast(null), 3200);
   };
 
-  useEffect(() => setOverrides({}), [data]);
+  useEffect(() => {
+    setOverrides({});
+  }, [data]);
 
   // Realtime: any booking change anywhere refreshes the board.
   useEffect(() => {

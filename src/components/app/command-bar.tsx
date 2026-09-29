@@ -67,7 +67,9 @@ export function CommandBar({ navKeys, aiMode, locale, currency }: { navKeys: str
     return q && aiMode ? [{ kind: 'ask', id: 'ask', label: query.trim() }, ...nav] : nav;
   }, [query, navKeys, tNav, aiMode]);
 
-  useEffect(() => setActive(0), [query]);
+  useEffect(() => {
+    setActive(0);
+  }, [query]);
 
   const select = useCallback(
     (row: Row) => {
