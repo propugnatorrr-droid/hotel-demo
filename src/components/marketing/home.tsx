@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { animate, motion, useInView, useScroll, useTransform } from 'motion/react';
 import { ArrowUpRight, Banknote, Bot, CalendarRange, Camera, Check, ChevronDown, Inbox, Network, PhoneCall, QrCode, ShieldAlert, Sparkles, Wine } from 'lucide-react';
+import { ADDONS, FOUNDING_HOTELS, foundingPrice, PLAN_PRICE_EUR, type SizeKey } from '@/config/plans';
 import { SeaHero } from '@/components/resort/sea-art';
 import { cn } from '@/lib/utils';
 import { pickMarketingCopy } from './copy';
@@ -66,6 +67,7 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
   const fade = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
   const [open, setOpen] = useState<number | null>(0);
+  const [size, setSize] = useState<SizeKey>('small');
   const other = locale === 'en' ? '/' : '/en';
 
   return (
@@ -171,18 +173,36 @@ export function MarketingHome({ locale, whatsapp, email }: { locale: string; wha
           <h2 className="font-display mt-4 text-5xl md:text-7xl">{t.pricing.title}</h2>
           <p className="mt-4 text-lg text-limestone-700">{t.pricing.sub}</p>
         </motion.div>
-        <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {t.pricing.plans.map((p, i) => (
-            <motion.div key={p.key} {...reveal} transition={{ ...reveal.transition, delay: i * 0.08 }} className={cn('relative flex flex-col rounded-3xl border p-6', 'popular' in p && p.popular ? 'border-transparent bg-ionian-900 text-limestone-50 shadow-float lg:-translate-y-3' : 'border-limestone-200 bg-white')}>
-              {'popular' in p && p.popular && <span className="absolute -top-3 left-6 rounded-full bg-gold-400 px-3 py-1 text-[11px] font-semibold text-ionian-950">{t.pricing.popular}</span>}
-              <h3 className="font-display text-3xl">{p.name}</h3>
-              <p className="mt-1 text-sm opacity-70">{p.text}</p>
-              <p className="font-serif mt-5 text-5xl tabular-nums">{p.price || t.pricing.custom}{p.price && <span className="font-sans text-sm opacity-60"> {t.pricing.per}</span>}</p>
-              <ul className="mt-6 flex-1 space-y-2.5 text-sm">
-                {p.features.map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-gold-500" />{f}</li>)}
-              </ul>
-              <a href="#contact" className={cn('mt-8 grid h-11 place-items-center rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5', 'popular' in p && p.popular ? 'bg-gold-400 text-ionian-950' : 'bg-ionian-900 text-limestone-50')}>{p.price ? t.pricing.cta : t.pricing.contact}</a>
-            </motion.div>
+        <div className="mt-10 flex flex-wrap items-center gap-3">
+          <span className="text-sm text-limestone-700">{t.pricing.sizeLabel}</span>
+          {(['small', 'medium', 'large'] as const).map((k) => <button key={k} type="button" onClick={() => setSize(k)} className={cn('h-10 rounded-full border px-5 text-sm transition-colors', size === k ? 'border-transparent bg-ionian-900 text-limestone-50' : 'border-limestone-300 hover:bg-limestone-100')}>{t.pricing.sizes[k]}</button>)}
+        </div>
+        <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-gold-100 px-4 py-1.5 text-xs font-medium text-limestone-800"><Sparkles className="size-3.5 text-accent" />{t.pricing.founding(FOUNDING_HOTELS)}</p>
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {t.pricing.plans.map((p, i) => {
+            const list = p.key === 'enterprise' ? null : PLAN_PRICE_EUR[p.key as 'basic' | 'pro' | 'premium'][size];
+            return (
+              <motion.div key={p.key} {...reveal} transition={{ ...reveal.transition, delay: i * 0.08 }} className={cn('relative flex flex-col rounded-3xl border p-6', 'popular' in p && p.popular ? 'border-transparent bg-ionian-900 text-limestone-50 shadow-float lg:-translate-y-3' : 'border-limestone-200 bg-white')}>
+                {'popular' in p && p.popular && <span className="absolute -top-3 left-6 rounded-full bg-gold-400 px-3 py-1 text-[11px] font-semibold text-ionian-950">{t.pricing.popular}</span>}
+                <h3 className="font-display text-3xl">{p.name}</h3>
+                <p className="mt-1 text-sm opacity-70">{p.text}</p>
+                {list ? (
+                  <p className="font-serif mt-5 text-5xl tabular-nums">{foundingPrice(list)} €<span className="font-sans text-sm opacity-60"> {t.pricing.per}</span><span className="mt-1 block font-sans text-xs opacity-60">{t.pricing.was}: <s>{list} €</s></span></p>
+                ) : (
+                  <p className="font-serif mt-5 text-3xl leading-tight">{t.pricing.enterpriseFrom}</p>
+                )}
+                <ul className="mt-6 flex-1 space-y-2.5 text-sm">
+                  {p.features.map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-gold-500" />{f}</li>)}
+                </ul>
+                <a href="#contact" className={cn('mt-8 grid h-11 place-items-center rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5', 'popular' in p && p.popular ? 'bg-gold-400 text-ionian-950' : 'bg-ionian-900 text-limestone-50')}>{list ? t.pricing.cta : t.pricing.contact}</a>
+              </motion.div>
+            );
+          })}
+        </div>
+        <div className="mt-10 grid gap-3 md:grid-cols-3">
+          <h3 className="font-display text-3xl md:col-span-3">{t.pricing.addonsTitle}</h3>
+          {t.pricing.addons.map((a) => (
+            <div key={a.name} className="rounded-2xl border border-limestone-200 bg-white p-5"><p className="font-medium">{a.name}</p><p className="mt-1 text-sm text-limestone-700">{a.text}</p><p className="font-serif mt-3 text-2xl">{a.price || `${ADDONS.realtimeSync[size]} € / ${locale === 'en' ? 'month' : 'muaj'}`}</p></div>
           ))}
         </div>
         <p className="mt-6 flex items-center gap-2 text-xs text-limestone-600"><Banknote className="size-4" /> {t.pricing.note}</p>

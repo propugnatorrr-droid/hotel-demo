@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input, Label } from '@/components/ui/input';
-import { ALL_MODULES, MODULE_LABELS, PLAN_PRICE_USD, type PlanKey } from '@/config/plans';
+import { ALL_MODULES, MODULE_LABELS, planPrice, sizeForRooms, type PlanKey } from '@/config/plans';
 import type { ModuleKey } from '@/lib/auth/types';
 import { relativeTime } from '@/lib/dates';
 import { cn } from '@/lib/utils';
@@ -73,7 +73,7 @@ function HotelPanel({ hotel, onDone, onEnter }: { hotel: AdminHotel; locale: str
         <Button className="mt-3 w-full" variant="secondary" disabled={act.pending} onClick={() => act.run(() => enterHotel(hotel.id), onEnter)}><LogIn /> Hyr në panel <ArrowRight /></Button>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Plani {PLAN_PRICE_USD[hotel.plan as PlanKey] ? `· $${PLAN_PRICE_USD[hotel.plan as PlanKey]}/muaj` : ''}</Label>
+        <div><Label>Plani {(() => { const sz = sizeForRooms(hotel.rooms); const pr = sz === 'enterprise' ? null : planPrice(hotel.plan as PlanKey, sz); return pr ? `· ${pr} €/muaj (${sz})` : ''; })()}</Label>
           <select className={select} value={hotel.plan} disabled={act.pending} onChange={(e) => act.run(() => setHotelPlan({ orgId: hotel.id, plan: e.target.value, applyModules: true }), onDone)}>{PLANS.map((p) => <option key={p}>{p}</option>)}</select></div>
         <div><Label>Statusi</Label>
           <select className={select} value={hotel.status} disabled={act.pending} onChange={(e) => act.run(() => setHotelStatus({ orgId: hotel.id, status: e.target.value }), onDone)}>{['demo', 'trial', 'active', 'suspended'].map((s) => <option key={s}>{s}</option>)}</select></div>

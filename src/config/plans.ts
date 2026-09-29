@@ -12,7 +12,39 @@ export const PLAN_MODULES: Record<PlanKey, ModuleKey[]> = {
   enterprise: ALL_MODULES,
 };
 
-export const PLAN_PRICE_USD: Record<PlanKey, number | null> = { basic: 20, pro: 50, premium: 100, enterprise: null };
+/** Hotel size drives the price: bigger properties use more AI, messages and support. */
+export type SizeKey = 'small' | 'medium' | 'large';
+export const SIZE_TIERS: Record<SizeKey, { maxRooms: number }> = { small: { maxRooms: 15 }, medium: { maxRooms: 40 }, large: { maxRooms: 100 } };
+export const sizeForRooms = (rooms: number): SizeKey | 'enterprise' => (rooms <= 15 ? 'small' : rooms <= 40 ? 'medium' : rooms <= 100 ? 'large' : 'enterprise');
+
+/** List price, EUR per month, billed monthly. Annual billing = 2 months free. Founding offer: 30% off for the first 50 hotels, locked 2 years. */
+export const PLAN_PRICE_EUR: Record<Exclude<PlanKey, 'enterprise'>, Record<SizeKey, number>> = {
+  basic: { small: 19, medium: 39, large: 79 },
+  pro: { small: 49, medium: 99, large: 179 },
+  premium: { small: 89, medium: 169, large: 299 },
+};
+export const FOUNDING_DISCOUNT = 0.3;
+export const FOUNDING_HOTELS = 50;
+
+/** Paid add-ons. Real-time OTA sync is priced above its Channex cost ($7/hotel/month). */
+export const ADDONS = {
+  realtimeSync: { small: 12, medium: 15, large: 19 } as Record<SizeKey, number>,
+  voice: { monthly: 39, includedMinutes: 150, extraPerMinute: 0.25 },
+  whatsapp: { includedMessages: 300, passThroughMarkup: 0.25 },
+};
+export const ENTERPRISE = { oneTimeMin: 5000, oneTimeMax: 20000, monthlyFrom: 249 };
+
+/** Estimated cost to serve one hotel per month, EUR (infra share, AI, messaging). Used for margin checks; review quarterly. */
+export const COST_ESTIMATE_EUR: Record<Exclude<PlanKey, 'enterprise'>, number> = { basic: 2, pro: 11, premium: 18 };
+export const REALTIME_SYNC_COST_EUR = 6.5;
+export const FIXED_COSTS_EUR_MONTH = 160; // Vercel Pro + Supabase Pro + Channex platform fee
+
+export const planPrice = (plan: PlanKey, size: SizeKey) => (plan === 'enterprise' ? null : PLAN_PRICE_EUR[plan][size]);
+export const foundingPrice = (list: number) => Math.round(list * (1 - FOUNDING_DISCOUNT));
+export function grossMargin(plan: Exclude<PlanKey, 'enterprise'>, size: SizeKey, founding = true) {
+  const price = founding ? foundingPrice(PLAN_PRICE_EUR[plan][size]) : PLAN_PRICE_EUR[plan][size];
+  return { price, cost: COST_ESTIMATE_EUR[plan], margin: price - COST_ESTIMATE_EUR[plan], pct: Math.round(((price - COST_ESTIMATE_EUR[plan]) / price) * 100) };
+}
 
 export const MODULE_LABELS: Record<ModuleKey, { sq: string; en: string }> = {
   pms: { sq: 'Recepsioni (PMS)', en: 'Front desk (PMS)' },

@@ -51,11 +51,22 @@ Owners in Albania have money but aren't very tech-savvy, so **simplicity is a fe
    - Deployed as a separate Vercel + Supabase project per client, or Docker on their own server if they insist.
    - Custom features for them live behind module flags, so the core never forks.
 
-### 3.2 Pricing (not final; to be decided with Gerti)
-- Gerti's market-entry proposal: **$400–500 per year** for the **first 50 hotels**, price **locked for 2 years**, raised in year 3.
-- Developer's tier idea: **$20 / $50 / $100 per month** (Basic / Pro / Premium) based on features and business size.
-- Custom/enterprise: **$5,000–20,000 one-time** + monthly maintenance.
-- Payment from clients: **cash at first** (Albanian hesitation with card payments). Later: automated card billing.
+### 3.2 Pricing (decided 2026-09-29, single source of truth: `src/config/plans.ts`)
+Price depends on **hotel size** (rooms) and **plan**. EUR per month, billed monthly. Annual = 2 months free.
+
+| Plan | 1-15 rooms | 16-40 rooms | 41-100 rooms |
+|---|---|---|---|
+| Basic | 19 | 39 | 79 |
+| Pro | 49 | 99 | 179 |
+| Premium | 89 | 169 | 299 |
+| Enterprise (100+ rooms, groups) | EUR 5,000-20,000 one-time + from EUR 249/month, own server and brand | | |
+
+- **Founding offer:** -30% for the first 50 hotels, locked 2 years (about EUR 34/month for a small Pro, in line with Gerti's $400-500/year idea). List price returns in year 3.
+- **Add-ons:** real-time OTA sync EUR 12 / 15 / 19 by size (Channex costs us about EUR 6.5); AI voice EUR 39/month incl. 150 min, then EUR 0.25/min (cost about EUR 0.12/min); WhatsApp 300 messages included from Pro, then cost + 25%. Free iCal sync stays in every plan.
+- **Hotels pay their fiscalization provider directly** (their own certificate).
+- **Margin check (founding price, est. cost per hotel: Basic 2, Pro 11, Premium 18 EUR):** Basic small 85%, Pro small 68%, Premium small 71%; larger sizes are higher. Real-time sync add-on 46-66%.
+- **Break-even:** fixed costs about EUR 160/month (Vercel Pro + Supabase Pro + Channex platform fee) = about 7 small Pro hotels at founding price, about 4 at list price.
+- Payment from clients: cash at first, automated card billing later. Cost estimates are assumptions; review quarterly with real OpenRouter/WhatsApp bills.
 
 ### 3.3 Cost reality check (per hotel, if we pay for everything)
 - Channex: $130/month platform fee + $7/hotel/month (only hotels with an active channel). Per hotel per year: ≈ $396 at 5 hotels, $162 at 20, $115 at 50, $100 at 100.
